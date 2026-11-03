@@ -16,7 +16,7 @@ Maven is not needed; the backend ships with the Maven wrapper.
 
 ## Running locally
 
-Backend (Spring Boot, port 8080):
+Backend (Spring Boot, port 8090):
 
 ```bash
 cd backend
