@@ -1,39 +1,196 @@
-/* Temporary base styles. The full design tokens and layout come with the app shell. */
-:root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.5;
-  color: #1d2433;
-  background: #f7f8fa;
+@import 'tailwindcss';
+
+/*
+ * Design tokens. Every colour has one meaning across the whole app:
+ * case red, ring 1 orange, ring 2 yellow, already vaccinated green,
+ * cannot be vaccinated grey, planned dose cyan. Dark is the default theme.
+ */
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --scene-top: #0d1220;
+  --scene-bottom: #05070c;
+  --scene-glow-a: rgba(255, 170, 110, 0.16);
+  --scene-glow-b: rgba(90, 140, 255, 0.14);
+  --grid-line: rgba(255, 255, 255, 0.07);
+
+  --glass: rgba(34, 39, 50, 0.52);
+  --glass-strong: rgba(42, 48, 61, 0.72);
+  --glass-inset: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-highlight: rgba(255, 255, 255, 0.12);
+  --shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7);
+
+  --text: #f3f5f9;
+  --text-muted: #a7afbf;
+  --text-faint: #6c7486;
+
+  --accent: #4d8dff;
+  --accent-soft: rgba(77, 141, 255, 0.18);
+  --case: #ff5a60;
+  --ring1: #ff9d47;
+  --ring2: #ffd166;
+  --vaccinated: #34d399;
+  --excluded: #8c95a6;
+  --planned: #3ad1f5;
+  --warning: #fbbf24;
+  --danger: #f87171;
+
+  --edge: rgba(255, 255, 255, 0.16);
+  --edge-solid: #dfe6f3;
+  --node: #c9d1df;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  --scene-top: #f4f4f2;
+  --scene-bottom: #dcdcda;
+  --scene-glow-a: rgba(255, 180, 120, 0.22);
+  --scene-glow-b: rgba(120, 160, 255, 0.18);
+  --grid-line: rgba(20, 24, 33, 0.07);
+
+  --glass: rgba(255, 255, 255, 0.58);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-inset: rgba(15, 23, 42, 0.035);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.9);
+  --shadow: 0 30px 70px -35px rgba(30, 41, 59, 0.45);
+
+  --text: #141821;
+  --text-muted: #556073;
+  --text-faint: #8a93a3;
+
+  --accent: #2f6fe8;
+  --accent-soft: rgba(47, 111, 232, 0.12);
+  --case: #e5383f;
+  --ring1: #ef7f1a;
+  --ring2: #d9a412;
+  --vaccinated: #12a46d;
+  --excluded: #7c8595;
+  --planned: #0aa5cc;
+  --warning: #c98a04;
+  --danger: #dc3c3c;
+
+  --edge: rgba(20, 24, 33, 0.16);
+  --edge-solid: #2a3242;
+  --node: #5b6577;
+}
+
+@theme inline {
+  --font-sans: 'Manrope Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-inset: var(--glass-inset);
+  --color-line: var(--glass-border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-case: var(--case);
+  --color-ring1: var(--ring1);
+  --color-ring2: var(--ring2);
+  --color-vaccinated: var(--vaccinated);
+  --color-excluded: var(--excluded);
+  --color-planned: var(--planned);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+}
+
+html,
+body,
+#root {
+  height: 100%;
 }
 
 body {
   margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--scene-bottom);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'tnum' 1;
 }
 
-.page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 48px 16px;
+/* Frosted glass surface used by every panel. */
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-highlight),
+    var(--shadow);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
 }
 
-.lead {
-  color: #4a5568;
+.glass-strong {
+  background: var(--glass-strong);
 }
 
-.status {
-  display: inline-block;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  background: #edf0f4;
+.inset {
+  background: var(--glass-inset);
+  border: 1px solid var(--glass-border);
 }
 
-.status-up {
-  background: #e3f4e8;
-  color: #1e6b3a;
+/* Perspective floor grid behind the network. */
+.scene-floor {
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: -10%;
+  height: 70%;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(900px) rotateX(64deg);
+  transform-origin: center top;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 60%, transparent 100%);
 }
 
-.status-down {
-  background: #fbe7e5;
-  color: #9b2c22;
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-border) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Callout lines: marching dashes and a soft pulse where they meet a person. */
+.callout-dash {
+  animation: callout-march 1.2s linear infinite;
+}
+
+.callout-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: callout-pulse 1.8s ease-out infinite;
+}
+
+@keyframes callout-march {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+@keyframes callout-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
 }
