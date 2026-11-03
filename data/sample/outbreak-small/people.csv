@@ -1,0 +1,41 @@
+person_id,name,age,role,vaccinated,eligible,refused
+P001,Rahul Sharma,38,engineer,false,true,false
+P002,Priya Sharma,35,nurse,false,true,false
+P003,Aarav Sharma,8,student,false,true,false
+P004,Anaya Sharma,0,infant,false,false,false
+P005,Suresh Iyer,62,retired,true,true,false
+P006,Lakshmi Iyer,58,shopkeeper,false,true,false
+P007,Imran Khan,29,driver,false,true,false
+P008,Sana Khan,27,teacher,false,true,false
+P009,Zoya Khan,4,child,false,true,false
+P010,Vikram Patel,45,office worker,false,true,false
+P011,Neha Patel,43,office worker,false,true,true
+P012,Rohan Patel,15,student,false,true,false
+P013,Arjun Nair,33,doctor,true,true,false
+P014,Divya Nair,31,office worker,false,false,false
+P015,Kiran Rao,50,shopkeeper,false,true,false
+P016,Meena Rao,48,cook,false,true,false
+P017,Ishaan Rao,10,student,false,true,false
+P018,Diya Rao,7,student,false,true,false
+P019,Farhan Ali,24,delivery rider,false,true,false
+P020,Ayesha Ali,22,student,false,true,false
+P021,Gopal Das,71,retired,false,true,false
+P022,Kamala Das,68,retired,true,true,false
+P023,Manoj Gupta,36,bus driver,false,true,false
+P024,Sunita Gupta,34,teacher,false,true,false
+P025,Kavya Gupta,9,student,false,true,false
+P026,Deepak Joshi,40,office worker,false,true,false
+P027,Pooja Joshi,39,pharmacist,false,true,false
+P028,Aditya Joshi,12,student,false,true,false
+P029,Ramesh Yadav,55,security guard,false,true,false
+P030,Nisha Verma,26,office worker,false,true,false
+P031,Sameer Kulkarni,30,shopkeeper,false,true,false
+P032,Tanvi Desai,23,student,false,true,false
+P033,Harish Menon,64,retired,false,true,false
+P034,Fatima Sheikh,41,cleaner,false,true,false
+P035,Ajay Chauhan,28,office worker,false,true,false
+P036,Rekha Pillai,52,cook,false,true,false
+P037,Nikhil Bose,19,student,false,true,false
+P038,Anjali Mishra,45,teacher,false,true,false
+P039,Varun Reddy,33,nurse,false,true,false
+P040,Sneha Kapoor,8,student,false,true,false

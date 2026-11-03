@@ -1,0 +1,9 @@
+person_id,name,age,role,vaccinated
+P001,Asha Rao,34,teacher,false
+P002,Ravi Kumar,41,driver,true
+P003,Meera Joshi,9,student,false
+P003,Meera Joshi (copy),9,student,false
+P004,Kabir Singh,140,retired,false
+P005,Leela Nair,,cook,
+P006,Om Prakash,50,guard,maybe
+P007,"Shah, Dev",22,student,false
