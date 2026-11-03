@@ -1,30 +1,29 @@
-import { useEffect, useState } from 'react'
-import { apiGet } from './api/client.js'
+import { Navigate, Route, Routes } from 'react-router'
+import { AppShell } from './components/shell/AppShell.jsx'
+import { TOOLS } from './lib/tools.js'
+import { ConsolePage } from './pages/ConsolePage.jsx'
+import { LoadPage } from './pages/LoadPage.jsx'
+import { PlaceholderPage } from './pages/PlaceholderPage.jsx'
+import { useWorkspace } from './state/context.js'
 
-function App() {
-  const [backend, setBackend] = useState({ state: 'checking' })
-
-  useEffect(() => {
-    apiGet('/health')
-      .then((data) => setBackend({ state: 'up', version: data.version }))
-      .catch((err) => setBackend({ state: 'down', message: err.message }))
-  }, [])
-
-  return (
-    <main className="page">
-      <h1>Ring Vaccination Planner</h1>
-      <p className="lead">
-        Plan who to vaccinate around confirmed cases so every risky contact is protected,
-        using as few doses as possible.
-      </p>
-      <p className={`status status-${backend.state}`}>
-        {backend.state === 'checking' && 'Connecting to the backend…'}
-        {backend.state === 'up' && `Backend connected (version ${backend.version})`}
-        {backend.state === 'down' &&
-          'Backend not reachable. Start it with ./mvnw spring-boot:run in the backend folder.'}
-      </p>
-    </main>
-  )
+function Home() {
+  const { network, restoring } = useWorkspace()
+  if (restoring) return null
+  return <Navigate to={network ? '/network' : '/load'} replace />
 }
 
-export default App
+export default function App() {
+  return (
+    <Routes>
+      <Route element={<AppShell />}>
+        <Route index element={<Home />} />
+        <Route path="load" element={<LoadPage />} />
+        <Route path="network" element={<ConsolePage />} />
+        {TOOLS.filter((t) => !t.ready).map((t) => (
+          <Route key={t.path} path={t.path.slice(1)} element={<PlaceholderPage />} />
+        ))}
+        <Route path="*" element={<PlaceholderPage />} />
+      </Route>
+    </Routes>
+  )
+}

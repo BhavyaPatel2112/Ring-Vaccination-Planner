@@ -40,6 +40,27 @@ cd backend
 ./mvnw test
 ```
 
+## API
+
+All endpoints are under `/api`. Errors always look like `{ "error": "...", "message": "...", "details": [...] }`: 400 for invalid input, 404 for an unknown network, 422 when the exact solver refuses a problem that is too large.
+
+| Method and path | What it does |
+|---|---|
+| `GET /api/samples` | List the sample networks |
+| `POST /api/networks/samples/{id}` | Load a sample network |
+| `POST /api/networks` | Upload `people`, `contacts` and optional `checkins`, `cases` CSV files (multipart) |
+| `POST /api/networks/generate` | Synthetic network: `{ "population": 5000, "avgContacts": 10, "seed": 2026 }` |
+| `GET /api/networks/{id}` | Nodes and links for drawing (sampled around the cases above 1,500 people) |
+| `POST /api/networks/{id}/ring` | Rings around cases: `{ "caseIds": ["P003"], "depth": 2 }` |
+| `POST /api/networks/{id}/plan` | Vaccination plan: `{ "caseIds": ["P003"], "method": "APPROX", "budget": 10 }` |
+| `POST /api/networks/{id}/compare` | Every method side by side on the same rings |
+
+Example:
+
+```bash
+curl -s -X POST localhost:8090/api/networks/samples/outbreak-small
+```
+
 ## Repository layout
 
 ```
