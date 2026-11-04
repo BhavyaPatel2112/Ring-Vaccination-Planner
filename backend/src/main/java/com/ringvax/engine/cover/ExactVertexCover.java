@@ -139,7 +139,7 @@ public class ExactVertexCover implements VertexCoverSolver {
         }
 
         long elapsed = System.nanoTime() - start;
-        return new CoverResult(NAME, choices, problem.unprotectableContacts(), choices.size(), elapsed);
+        return new CoverResult(NAME, choices, problem.unprotectableContacts(), choices.size(), elapsed, search.nodes);
     }
 
     private static int countPeople(ContactGraph graph, int[] contacts) {

@@ -12,9 +12,10 @@ import java.util.List;
  * @param lowerBound            proven lower bound on the minimum cover size for this problem,
  *                              or -1 if the method does not provide one
  * @param runtimeNanos          time spent inside the solver
+ * @param searchNodes           search tree nodes explored (exact solver), 0 for methods without a search
  */
 public record CoverResult(String method, List<CoverChoice> choices, int[] unprotectableContacts,
-                          int lowerBound, long runtimeNanos) {
+                          int lowerBound, long runtimeNanos, long searchNodes) {
 
     public CoverResult {
         choices = List.copyOf(choices);

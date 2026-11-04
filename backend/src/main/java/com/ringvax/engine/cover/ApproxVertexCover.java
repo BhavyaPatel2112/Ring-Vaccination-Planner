@@ -69,7 +69,7 @@ public class ApproxVertexCover implements VertexCoverSolver {
         }
 
         long elapsed = System.nanoTime() - start;
-        return new CoverResult(NAME, choices, problem.unprotectableContacts(), forced.length + matched, elapsed);
+        return new CoverResult(NAME, choices, problem.unprotectableContacts(), forced.length + matched, elapsed, 0);
     }
 
     private static String id(ContactGraph graph, int person) {
