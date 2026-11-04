@@ -1,0 +1,25 @@
+input,size,algorithm,median_ms,min_ms,max_ms,repeats
+random,10000,randomized quickselect,0.2707,0.1958,0.2990,7
+random,10000,median of medians,0.5701,0.5626,1.9244,7
+random,10000,full sort,0.6794,0.6720,0.6823,7
+random,100000,randomized quickselect,1.1680,1.1000,2.4626,7
+random,100000,median of medians,3.4707,2.6795,4.3504,7
+random,100000,full sort,4.5476,4.4921,6.6315,7
+random,1000000,randomized quickselect,8.6786,5.0510,10.3988,7
+random,1000000,median of medians,21.8676,21.8083,22.0102,7
+random,1000000,full sort,51.2696,51.1384,51.5806,7
+random,10000000,randomized quickselect,88.6645,60.1543,106.9480,7
+random,10000000,median of medians,217.6315,217.3275,223.4130,7
+random,10000000,full sort,693.9470,618.0941,1432.9679,7
+sorted,10000,randomized quickselect,0.0755,0.0528,0.1635,7
+sorted,10000,median of medians,0.3085,0.1213,0.9616,7
+sorted,10000,full sort,0.1236,0.0921,0.5526,7
+sorted,100000,randomized quickselect,0.6789,0.3801,1.0403,7
+sorted,100000,median of medians,3.6798,1.9468,5.0697,7
+sorted,100000,full sort,0.3277,0.2683,17.7385,7
+sorted,1000000,randomized quickselect,4.5330,2.6124,5.8129,7
+sorted,1000000,median of medians,12.2670,12.0265,14.6210,7
+sorted,1000000,full sort,0.2300,0.1948,0.2847,7
+sorted,10000000,randomized quickselect,29.4333,17.2468,64.2835,7
+sorted,10000000,median of medians,113.4895,108.4618,143.0880,7
+sorted,10000000,full sort,2.0428,1.8876,3.4960,7

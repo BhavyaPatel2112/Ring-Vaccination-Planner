@@ -1,0 +1,15 @@
+family,people,networks,mean_ratio,max_ratio,share_optimal,mean_approx,mean_exact
+random avg 3 contacts,10,30,1.6100,2.0000,0.0000,8.0667,5.1000
+random avg 3 contacts,15,30,1.6311,2.0000,0.0000,12.1333,7.4667
+random avg 3 contacts,20,30,1.6445,2.0000,0.0000,16.0000,9.7667
+random avg 3 contacts,25,30,1.6201,1.8333,0.0000,19.2000,11.9000
+random avg 3 contacts,30,30,1.6457,1.8667,0.0000,23.7333,14.4333
+random avg 3 contacts,35,30,1.6119,1.7895,0.0000,27.7333,17.2333
+random avg 3 contacts,40,30,1.6331,1.8824,0.0000,31.1333,19.1000
+random avg 6 contacts,10,30,1.3556,1.6667,0.0000,9.3333,6.9000
+random avg 6 contacts,15,30,1.3632,1.5556,0.0333,13.3333,9.8000
+random avg 6 contacts,20,30,1.3907,1.6364,0.0000,17.9333,12.9333
+random avg 6 contacts,25,30,1.4419,1.6000,0.0000,22.4667,15.6000
+random avg 6 contacts,30,30,1.4677,1.6667,0.0000,27.2000,18.5667
+random avg 6 contacts,35,30,1.4417,1.6842,0.0000,31.4667,21.8667
+random avg 6 contacts,40,30,1.4362,1.5833,0.0000,35.6667,24.8667
