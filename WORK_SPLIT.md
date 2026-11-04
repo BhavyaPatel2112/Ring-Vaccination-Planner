@@ -1,6 +1,8 @@
 # Ring Vaccination Planner: Work Split
 
-Replaces the suggested split in `PROJECT_PLAN.md` section 13. Feature definitions are in `PROJECT_PLAN.md` sections 4.1, 4.2 and 4.4.
+Replaces the suggested split in `PROJECT_PLAN.md` section 13.
+
+> **Status, 4 November:** all of Bhavya's work is done and pushed. The current state and Tanushree's updated task list are in [handoff/](handoff/README.md). The report and proposal are on hold. Feature definitions are in `PROJECT_PLAN.md` sections 4.1, 4.2 and 4.4.
 
 - **Bhavya Patel:** Tuesday 3 Nov to Sunday 8 Nov 2026 (6 days, then on vacation)
 - **Tanushree:** Monday 9 Nov to Friday 20 Nov 2026 (12 days, through final submission and demo)

@@ -5,7 +5,7 @@ A planning tool for outbreak response teams. Given a contact network and the con
 Advanced Algorithm, CIA 3 project, ATLAS SkillTech University (2026 to 27).
 Team: Bhavya Patel and Tanushree.
 
-> Work in progress. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full design and [WORK_SPLIT.md](WORK_SPLIT.md) for who is building what.
+> Work in progress. Start with [handoff/](handoff/README.md) for the current status and how to continue. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full design and [WORK_SPLIT.md](WORK_SPLIT.md) for who is building what.
 
 ## Prerequisites
 
