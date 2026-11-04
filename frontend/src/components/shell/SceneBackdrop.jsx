@@ -1,8 +1,6 @@
-import { motion } from 'motion/react'
-
 /**
- * The deep "room" behind every screen: soft warm and cool light, a perspective
- * floor grid and a slow light sweep. Purely decorative.
+ * The calm "room" behind every screen: soft warm and cool light and a faint
+ * perspective floor. Purely decorative and static.
  */
 export function SceneBackdrop() {
   return (
@@ -18,12 +16,6 @@ export function SceneBackdrop() {
       <div
         className="absolute -right-[15%] top-[10%] h-[70vh] w-[60vw] rounded-full blur-3xl"
         style={{ background: 'radial-gradient(closest-side, var(--scene-glow-b), transparent)' }}
-      />
-      <motion.div
-        className="absolute -top-1/2 left-0 h-[200%] w-1/3 -skew-x-12 opacity-[0.06]"
-        style={{ background: 'linear-gradient(90deg, transparent, white, transparent)' }}
-        animate={{ x: ['-60vw', '160vw'] }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'linear', repeatDelay: 6 }}
       />
       <div className="scene-floor" />
     </div>

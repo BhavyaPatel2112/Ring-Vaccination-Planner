@@ -1,7 +1,7 @@
 import { useAutoAnimate } from '@formkit/auto-animate/react'
 import { motion } from 'motion/react'
 import { ArrowRight, CircleCheck, TriangleAlert } from 'lucide-react'
-import { formatNumber } from '../../lib/format.js'
+import { formatNumber, sentence } from '../../lib/format.js'
 import { Button } from '../ui/Button.jsx'
 import { StatTile } from '../ui/StatTile.jsx'
 
@@ -15,7 +15,7 @@ export function LoadReport({ network, onOpen }) {
     <motion.section
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass glass-strong rounded-[24px] p-5"
+      className="glass rounded-[20px] p-5"
       aria-label="Load report"
     >
       <div className="flex flex-wrap items-center gap-4">
@@ -47,8 +47,8 @@ export function LoadReport({ network, onOpen }) {
             .slice(0, 120)
             .map((item, i) => (
               <li key={i} className="inset rounded-xl px-3 py-2">
-                <p className="text-[10px] font-bold tracking-wide text-warning uppercase">
-                  {item.code.replaceAll('_', ' ')} <span className="font-medium normal-case text-faint">{item.where}</span>
+                <p className="text-xs font-semibold">
+                  {sentence(item.code)} <span className="font-normal text-muted">· {item.where}</span>
                 </p>
                 <p className="text-xs text-muted">{item.text}</p>
               </li>

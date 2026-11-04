@@ -10,20 +10,20 @@
   color-scheme: dark;
   --scene-top: #0d1220;
   --scene-bottom: #05070c;
-  --scene-glow-a: rgba(255, 170, 110, 0.16);
-  --scene-glow-b: rgba(90, 140, 255, 0.14);
-  --grid-line: rgba(255, 255, 255, 0.07);
+  --scene-glow-a: rgba(255, 170, 110, 0.10);
+  --scene-glow-b: rgba(90, 140, 255, 0.10);
+  --grid-line: rgba(255, 255, 255, 0.05);
 
-  --glass: rgba(34, 39, 50, 0.52);
+  --glass: rgba(30, 35, 46, 0.62);
   --glass-strong: rgba(42, 48, 61, 0.72);
   --glass-inset: rgba(255, 255, 255, 0.04);
   --glass-border: rgba(255, 255, 255, 0.09);
   --glass-highlight: rgba(255, 255, 255, 0.12);
-  --shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7);
+  --shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.65);
 
   --text: #f3f5f9;
   --text-muted: #a7afbf;
-  --text-faint: #6c7486;
+  --text-faint: #858da0;
 
   --accent: #4d8dff;
   --accent-soft: rgba(77, 141, 255, 0.18);
@@ -43,22 +43,22 @@
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --scene-top: #f4f4f2;
-  --scene-bottom: #dcdcda;
-  --scene-glow-a: rgba(255, 180, 120, 0.22);
-  --scene-glow-b: rgba(120, 160, 255, 0.18);
-  --grid-line: rgba(20, 24, 33, 0.07);
+  --scene-top: #f5f5f3;
+  --scene-bottom: #e6e6e3;
+  --scene-glow-a: rgba(255, 180, 120, 0.14);
+  --scene-glow-b: rgba(120, 160, 255, 0.12);
+  --grid-line: rgba(20, 24, 33, 0.05);
 
-  --glass: rgba(255, 255, 255, 0.58);
-  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass: rgba(255, 255, 255, 0.72);
+  --glass-strong: rgba(255, 255, 255, 0.9);
   --glass-inset: rgba(15, 23, 42, 0.035);
   --glass-border: rgba(15, 23, 42, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.9);
-  --shadow: 0 30px 70px -35px rgba(30, 41, 59, 0.45);
+  --shadow: 0 18px 50px -30px rgba(30, 41, 59, 0.35);
 
   --text: #141821;
   --text-muted: #556073;
-  --text-faint: #8a93a3;
+  --text-faint: #6b7385;
 
   --accent: #2f6fe8;
   --accent-soft: rgba(47, 111, 232, 0.12);
@@ -167,21 +167,11 @@ body {
   }
 }
 
-/* Callout lines: marching dashes and a soft pulse where they meet a person. */
-.callout-dash {
-  animation: callout-march 1.2s linear infinite;
-}
-
+/* Callout line: a soft pulse where it meets the person. */
 .callout-pulse {
   transform-box: fill-box;
   transform-origin: center;
-  animation: callout-pulse 1.8s ease-out infinite;
-}
-
-@keyframes callout-march {
-  to {
-    stroke-dashoffset: -20;
-  }
+  animation: callout-pulse 2.4s ease-out infinite;
 }
 
 @keyframes callout-pulse {

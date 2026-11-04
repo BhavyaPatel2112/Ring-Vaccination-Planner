@@ -1,7 +1,7 @@
 import cytoscape from 'cytoscape'
 import fcose from 'cytoscape-fcose'
 import { AnimatePresence, motion } from 'motion/react'
-import { Maximize, Minus, Plus } from 'lucide-react'
+import { Expand, Maximize, Minus, Plus, Shrink } from 'lucide-react'
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { IconButton } from '../ui/Button.jsx'
 import { buildNetworkStyle, seededPosition } from './networkStyle.js'
@@ -19,13 +19,12 @@ const linkKey = (a, b) => (a < b ? `${a}~${b}` : `${b}~${a}`)
  * callout lines) and `fit()`.
  */
 export const NetworkCanvas = forwardRef(function NetworkCanvas(
-  { view, ring, plan, cases, selected, hovered, onSelect, onHover },
+  { view, ring, plan, cases, selected, hovered, onSelect, onHover, expanded, onToggleExpand },
   ref,
 ) {
   const container = useRef(null)
   const cyRef = useRef(null)
   const [tip, setTip] = useState(null)
-  const [ready, setReady] = useState(false)
 
   // Create the graph once per network.
   useEffect(() => {
@@ -58,8 +57,7 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
       name: 'fcose',
       quality: big ? 'draft' : 'proof',
       randomize: true,
-      // Computed in one go (no frame-by-frame animation) so it never stalls in a throttled tab;
-      // the canvas fades in instead.
+      // Computed in one go, so the finished picture appears straight away.
       animate: false,
       nodeRepulsion: 9000,
       idealEdgeLength: big ? 30 : 70,
@@ -70,7 +68,6 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
       padding: 36,
       fit: true,
     }).run()
-    setReady(true)
 
     const restyle = () => cy.style(buildNetworkStyle())
     window.addEventListener('ringvax-theme', restyle)
@@ -89,7 +86,6 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
       window.removeEventListener('ringvax-theme', restyle)
       cy.destroy()
       cyRef.current = null
-      setReady(false)
     }
   }, [view])
 
@@ -204,16 +200,14 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
   return (
     <div className="absolute inset-0">
       {/* Cytoscape forces position: relative on its container, so it fills a sized wrapper. */}
-      <div
-        ref={container}
-        className={`h-full w-full transition-[opacity,transform] duration-700 ease-out ${ready ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
-        aria-label="Contact network"
-        role="img"
-      />
+      <div ref={container} className="h-full w-full" aria-label="Contact network" role="img" />
       <div className="glass absolute right-3 bottom-3 flex flex-col gap-1 rounded-full p-1">
         <IconButton icon={Plus} label="Zoom in" onClick={() => zoom(1.3)} />
         <IconButton icon={Minus} label="Zoom out" onClick={() => zoom(1 / 1.3)} />
         <IconButton icon={Maximize} label="Fit to screen" onClick={() => cyRef.current?.animate({ fit: { padding: 36 } }, { duration: 500 })} />
+        {onToggleExpand && (
+          <IconButton icon={expanded ? Shrink : Expand} label={expanded ? 'Show side panels' : 'Expand the map'} onClick={onToggleExpand} />
+        )}
       </div>
       <AnimatePresence>
         {person && (
@@ -223,10 +217,10 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="glass glass-strong pointer-events-none absolute z-10 w-56 rounded-2xl p-3 text-xs"
+            className="glass glass-strong pointer-events-none absolute z-10 w-56 rounded-2xl p-3 text-xs leading-relaxed"
             style={{ left: tip.left, top: tip.top }}
           >
-            <p className="text-[13px] font-semibold">{person.name || person.id}</p>
+            <p className="text-sm font-semibold">{person.name || person.id}</p>
             <p className="text-muted">
               {person.id}
               {person.age != null && ` · ${person.age} yrs`}

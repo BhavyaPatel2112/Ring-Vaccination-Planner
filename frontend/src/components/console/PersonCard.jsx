@@ -18,14 +18,15 @@ export function PersonCard({ personId, ctx, onClose, onFocus }) {
         <motion.section
           key={person.id}
           data-callout="selected"
-          initial={{ opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 16 }}
-          className="glass glass-strong rounded-[22px] p-4"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+          className="glass glass-strong absolute top-14 right-3 z-20 w-72 rounded-[20px] p-4"
           aria-label={`Details for ${person.name || person.id}`}
         >
           <div className="flex items-start gap-3">
-            <span className="inset grid size-11 shrink-0 place-items-center rounded-full text-sm font-bold">
+            <span className="inset grid size-10 shrink-0 place-items-center rounded-full text-sm font-bold">
               {initials(person.name, person.id)}
             </span>
             <div className="min-w-0 flex-1">
@@ -36,7 +37,12 @@ export function PersonCard({ personId, ctx, onClose, onFocus }) {
                 {person.role && ` · ${person.role}`}
               </p>
             </div>
-            <button type="button" onClick={onClose} aria-label="Close details" className="text-muted hover:text-text">
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close details"
+              className="grid size-8 place-items-center rounded-full text-muted hover:bg-inset hover:text-text"
+            >
               <X className="size-4" />
             </button>
           </div>
@@ -47,7 +53,7 @@ export function PersonCard({ personId, ctx, onClose, onFocus }) {
             </div>
             <div className="inset rounded-xl p-2">
               <p className="text-muted">Status</p>
-              <p className="font-semibold" style={{ color: statusOf(person, ctx).color }}>
+              <p className="font-semibold leading-snug" style={{ color: statusOf(person, ctx).color }}>
                 {statusOf(person, ctx).label}
               </p>
             </div>
@@ -62,7 +68,7 @@ export function PersonCard({ personId, ctx, onClose, onFocus }) {
             <Button size="sm" variant={isCase ? 'glass' : 'danger'} className="flex-1" onClick={() => toggleCase(person.id)}>
               {isCase ? 'Remove case' : 'Mark as confirmed case'}
             </Button>
-            <Button size="sm" icon={Crosshair} onClick={() => onFocus(person.id)} aria-label="Centre on this person" />
+            <Button size="sm" icon={Crosshair} onClick={() => onFocus(person.id)} aria-label="Centre on this person" title="Centre on map" />
           </div>
         </motion.section>
       )}

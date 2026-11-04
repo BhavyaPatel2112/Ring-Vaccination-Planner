@@ -15,7 +15,7 @@ export function GeneratePanel({ onGenerate, busy, delay }) {
   const population = POPULATIONS[size]
 
   return (
-    <GlassPanel delay={delay} grabber className="flex h-full flex-col">
+    <GlassPanel delay={delay} className="flex h-full flex-col">
       <PanelTitle icon={Building2} title="Generate a town" subtitle="Realistic synthetic contacts, same seed same town" />
       <div className="flex flex-col gap-5">
         <Slider label="People" value={size} onChange={setSize} min={0} max={POPULATIONS.length - 1} format={() => formatNumber(population)} />
@@ -41,7 +41,7 @@ export function GeneratePanel({ onGenerate, busy, delay }) {
             </button>
           </div>
         </label>
-        <p className="text-[11px] text-muted">
+        <p className="text-xs text-muted">
           About {formatNumber(Math.round((population * contacts) / 2))} contacts. Households of 2 to 6, schools and
           workplaces of 20 to 200, plus community links.
         </p>

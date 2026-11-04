@@ -30,8 +30,6 @@ export function buildNetworkStyle() {
         'underlay-opacity': 0,
         'underlay-padding': 6,
         'underlay-shape': 'ellipse',
-        'transition-property': 'background-color, border-color, border-width, underlay-opacity, opacity',
-        'transition-duration': 450,
       },
     },
     {
@@ -43,8 +41,6 @@ export function buildNetworkStyle() {
         'line-opacity': 0.2,
         'curve-style': 'haystack',
         'haystack-radius': 0,
-        'transition-property': 'line-color, line-opacity, opacity, width',
-        'transition-duration': 450,
       },
     },
     { selector: 'node.ring3', style: { 'background-color': v('--ring2'), 'background-opacity': 0.55 } },

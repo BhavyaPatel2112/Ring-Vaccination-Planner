@@ -15,3 +15,9 @@ export function initials(name, id) {
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
   return (id || '?').slice(0, 2).toUpperCase()
 }
+
+/** "SELF_CONTACT" -> "Self contact" */
+export function sentence(code) {
+  const text = code.toLowerCase().replaceAll('_', ' ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

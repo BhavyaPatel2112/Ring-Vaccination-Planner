@@ -15,8 +15,8 @@ export function PlanCard({ delay }) {
   const ratio = plan?.provenRatioBound
 
   return (
-    <GlassPanel delay={delay} grabber>
-      <PanelTitle icon={ShieldCheck} title="Vaccination plan" subtitle="Protect every risky link with few doses" />
+    <GlassPanel delay={delay}>
+      <PanelTitle icon={ShieldCheck} title="Vaccination plan" subtitle="Fewest doses that protect every link" />
       <Segmented
         size="sm"
         label="Method"
@@ -25,7 +25,7 @@ export function PlanCard({ delay }) {
         onChange={setMethod}
         options={[
           { value: 'APPROX', label: 'Approximation' },
-          { value: 'EXACT', label: 'Exact (small rings)' },
+          { value: 'EXACT', label: 'Exact' },
         ]}
       />
       {!plan && (
@@ -39,20 +39,23 @@ export function PlanCard({ delay }) {
           Generate plan
         </Button>
       )}
-      {cases.length === 0 && <p className="mt-2 text-xs text-muted">Mark at least one confirmed case first.</p>}
+      {!plan && cases.length === 0 && <p className="mt-2 text-xs text-muted">Mark a confirmed case first.</p>}
+      {!plan && method === 'EXACT' && cases.length > 0 && (
+        <p className="mt-2 text-xs text-muted">Exact works on small rings only (up to 40 people to decide).</p>
+      )}
       {plan && (
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-3">
           <div className="flex items-end justify-between gap-3">
             <StatTile label="Doses" value={plan.doses} size="lg" tone="var(--planned)" />
-            <div className="pb-2 text-right text-[11px] text-muted">
+            <div className="pb-2 text-right text-xs text-muted">
               <p>{plan.method === 'EXACT' ? 'Exact minimum' : '2-approximation'}</p>
               <p>{plan.runtimeMs.toFixed(plan.runtimeMs < 10 ? 2 : 0)} ms in Java</p>
             </div>
           </div>
           {ratio != null && (
             <div>
-              <div className="flex justify-between text-[11px] text-muted">
-                <span>Proven distance from the minimum</span>
+              <div className="flex justify-between text-xs text-muted">
+                <span>Distance from the minimum</span>
                 <span className="font-semibold text-text">at most {ratio.toFixed(2)}×</span>
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-inset">
@@ -64,7 +67,7 @@ export function PlanCard({ delay }) {
                   transition={{ duration: 0.8, ease: 'easeOut' }}
                 />
               </div>
-              <div className="mt-1 flex justify-between text-[10px] text-faint">
+              <div className="mt-1 flex justify-between text-xs text-faint">
                 <span>1× (optimal)</span>
                 <span>2× (guarantee)</span>
               </div>

@@ -1,5 +1,5 @@
 import { motion } from 'motion/react'
-import { LoaderCircle } from 'lucide-react'
+import { ArrowRight, LoaderCircle } from 'lucide-react'
 
 const PALETTE = ['var(--case)', 'var(--ring1)', 'var(--ring2)', 'var(--vaccinated)', 'var(--planned)', 'var(--excluded)']
 
@@ -51,26 +51,29 @@ export function SampleCard({ sample, index, loading, onOpen }) {
       type="button"
       onClick={onOpen}
       disabled={loading}
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.08 * index, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -8, rotateX: 4, rotateY: -4 }}
+      transition={{ delay: 0.04 * index, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
-      style={{ transformPerspective: 900 }}
-      className="glass glass-strong group relative flex h-72 w-60 shrink-0 snap-start flex-col overflow-hidden rounded-[22px] p-4 text-left"
+      className="glass group relative flex h-64 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-[20px] p-4 text-left transition-shadow hover:shadow-[0_20px_50px_-25px_var(--accent)]"
     >
-      <p className="relative z-10 text-center text-[17px] leading-tight font-medium tracking-tight">{sample.label}</p>
-      <p className="relative z-10 mt-1 line-clamp-2 min-h-[2.6em] text-center text-[11px] leading-snug text-muted">
+      <p className="relative z-10 text-[15px] leading-tight font-semibold tracking-tight">{sample.label}</p>
+      <p className="relative z-10 mt-1 line-clamp-2 min-h-[2.8em] text-xs leading-snug text-muted">
         {sample.description}
       </p>
-      <div className="relative -mx-2 mt-1 min-h-0 flex-1">
+      <div className="relative -mx-2 my-1 min-h-0 flex-1">
         <Illustration id={sample.id} />
       </div>
-      <span className="absolute bottom-4 left-4 grid size-9 place-items-center rounded-full bg-accent text-white shadow-lg">
-        {loading ? <LoaderCircle className="size-4 animate-spin" /> : <span className="text-xs font-bold">{index + 1}</span>}
-      </span>
-      <span className="absolute right-4 bottom-5 text-[11px] font-semibold text-accent opacity-0 transition group-hover:opacity-100">
-        Open →
+      <span className="flex items-center justify-between text-xs font-semibold text-accent">
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <LoaderCircle className="size-4 animate-spin" /> Loading
+          </span>
+        ) : (
+          <span>Open sample</span>
+        )}
+        <ArrowRight className="size-4 transition group-hover:translate-x-0.5" />
       </span>
     </motion.button>
   )

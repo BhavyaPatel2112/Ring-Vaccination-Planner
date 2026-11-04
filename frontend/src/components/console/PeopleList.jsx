@@ -9,11 +9,11 @@ const LIMIT = 80
  */
 export function PeopleList({ ids, people, ctx, onHover, onSelect, empty }) {
   const [listRef] = useAutoAnimate()
-  if (ids.length === 0) return <p className="px-1 py-2 text-xs text-muted">{empty}</p>
+  if (ids.length === 0) return <p className="px-1 py-3 text-sm text-muted">{empty}</p>
   const shown = ids.slice(0, LIMIT)
   return (
     <>
-      <ul ref={listRef} className="scroll-thin flex max-h-64 flex-col gap-1 overflow-y-auto pr-1">
+      <ul ref={listRef} className="scroll-thin flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-1">
         {shown.map((id) => {
           const person = people.get(id) ?? { id, name: '', eligible: true }
           const status = statusOf(person, ctx)
@@ -31,24 +31,24 @@ export function PeopleList({ ids, people, ctx, onHover, onSelect, empty }) {
               >
                 <span className="size-2 shrink-0 rounded-full" style={{ background: status.color }} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-semibold">{person.name || id}</span>
-                  <span className="block truncate text-[11px] text-muted">
+                  <span className="block truncate text-sm font-semibold">{person.name || id}</span>
+                  <span className="block truncate text-xs text-muted">
                     {id}
                     {person.role && ` · ${person.role}`}
                   </span>
                 </span>
                 <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
                   style={{ color: status.color, background: `color-mix(in srgb, ${status.color} 14%, transparent)` }}
                 >
-                  {status.label.split(':')[0]}
+                  {status.short}
                 </span>
               </button>
             </li>
           )
         })}
       </ul>
-      {ids.length > LIMIT && <p className="px-1 pt-2 text-[11px] text-muted">and {ids.length - LIMIT} more</p>}
+      {ids.length > LIMIT && <p className="px-1 pt-2 text-xs text-muted">and {ids.length - LIMIT} more</p>}
     </>
   )
 }

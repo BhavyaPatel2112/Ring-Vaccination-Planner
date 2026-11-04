@@ -65,7 +65,7 @@ export function Callouts({ canvas, links }) {
     <svg ref={svg} className="pointer-events-none fixed inset-0 z-[15] h-full w-full" aria-hidden="true">
       {links.map((link) => (
         <g key={link.key} data-link={link.key} style={{ opacity: 0, transition: 'opacity 200ms' }}>
-          <path d="" fill="none" stroke={link.color} strokeWidth="1.5" strokeDasharray="5 5" className="callout-dash" />
+          <path d="" fill="none" stroke={link.color} strokeWidth="1.5" strokeDasharray="4 5" />
           <circle r="4" fill={link.color} />
           <circle r="9" fill="none" stroke={link.color} strokeWidth="1.5" className="callout-pulse" />
           <circle r="3" fill={link.color} />

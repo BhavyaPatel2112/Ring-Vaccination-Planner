@@ -5,7 +5,7 @@ import { cn } from '../../lib/cn.js'
 export function StatTile({ label, value, suffix, tone, className, size = 'md' }) {
   return (
     <div className={cn('min-w-0', className)}>
-      <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted">
+      <div className="flex items-center gap-1.5 text-xs font-medium text-muted">
         {tone && <span className="size-1.5 rounded-full" style={{ background: tone }} />}
         <span className="truncate">{label}</span>
       </div>

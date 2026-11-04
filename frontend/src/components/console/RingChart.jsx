@@ -7,8 +7,8 @@ ChartJS.register(ArcElement, Tooltip)
 const SLICES = [
   ['Ring 1 doses', '--ring1'],
   ['Ring 2', '--ring2'],
-  ['Already vaccinated', '--vaccinated'],
-  ['Cannot be vaccinated', '--excluded'],
+  ['Vaccinated', '--vaccinated'],
+  ['Excluded', '--excluded'],
 ]
 
 function readColors() {
@@ -52,11 +52,11 @@ export function RingChart({ ring }) {
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
           <div>
             <p className="text-xl font-semibold">{total}</p>
-            <p className="text-[10px] text-muted">in rings</p>
+            <p className="text-xs text-muted">in rings</p>
           </div>
         </div>
       </div>
-      <ul className="flex min-w-0 flex-col gap-1.5 text-xs">
+      <ul className="flex min-w-0 flex-1 flex-col gap-1.5 text-xs">
         {SLICES.map(([label], i) => (
           <li key={label} className="flex items-center gap-2">
             <span className="size-2 rounded-full" style={{ background: colors.slices[i] }} />

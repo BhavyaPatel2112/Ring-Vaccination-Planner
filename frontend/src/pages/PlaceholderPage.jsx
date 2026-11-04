@@ -12,7 +12,7 @@ export function PlaceholderPage() {
   const Icon = tool?.icon
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 items-center px-4 pt-10">
-      <GlassPanel grabber className="w-full p-8 text-center">
+      <GlassPanel className="w-full p-8 text-center">
         {Icon && (
           <span className="inset mx-auto grid size-14 place-items-center rounded-full">
             <Icon className="size-6 text-accent" />

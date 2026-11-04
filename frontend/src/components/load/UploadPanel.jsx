@@ -37,7 +37,7 @@ export function UploadPanel({ onUpload, busy, delay }) {
   const ready = files.people && files.contacts
 
   return (
-    <GlassPanel delay={delay} grabber className="flex h-full flex-col">
+    <GlassPanel delay={delay} className="flex h-full flex-col">
       <PanelTitle icon={FileUp} title="Upload your files" subtitle="CSV files from your contact tracing team" />
       <div
         onDragOver={(event) => {
@@ -78,7 +78,7 @@ export function UploadPanel({ onUpload, busy, delay }) {
                       {slot.label}
                       {slot.required && <span className="text-accent"> *</span>}
                     </span>
-                    <span className="block truncate text-[11px] text-muted">{file ? file.name : slot.hint}</span>
+                    <span className="block truncate text-xs text-muted">{file ? file.name : slot.hint}</span>
                   </span>
                 </button>
                 <input
