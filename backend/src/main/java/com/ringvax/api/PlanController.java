@@ -19,6 +19,7 @@ import com.ringvax.api.dto.RingRequest;
 import com.ringvax.api.dto.RingResponse;
 import com.ringvax.service.FollowUpService;
 import com.ringvax.service.PlanService;
+import com.ringvax.service.WholeNetworkService;
 
 import jakarta.validation.Valid;
 
@@ -29,10 +30,12 @@ public class PlanController {
 
     private final PlanService plans;
     private final FollowUpService followUps;
+    private final WholeNetworkService wholeNetwork;
 
-    public PlanController(PlanService plans, FollowUpService followUps) {
+    public PlanController(PlanService plans, FollowUpService followUps, WholeNetworkService wholeNetwork) {
         this.plans = plans;
         this.followUps = followUps;
+        this.wholeNetwork = wholeNetwork;
     }
 
     @GetMapping("/methods")
@@ -62,5 +65,11 @@ public class PlanController {
     @PostMapping("/networks/{networkId}/follow-up")
     public FollowUpResponse followUp(@PathVariable String networkId, @Valid @RequestBody FollowUpRequest request) {
         return followUps.followUp(networkId, request);
+    }
+
+    /** Every method on every link of the network (no rings): the plain vertex cover problem. */
+    @PostMapping("/networks/{networkId}/compare-all")
+    public CompareResponse compareAll(@PathVariable String networkId) {
+        return wholeNetwork.compareAllContacts(networkId);
     }
 }

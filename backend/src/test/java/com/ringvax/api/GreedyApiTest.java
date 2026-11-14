@@ -74,4 +74,25 @@ class GreedyApiTest {
         postJson("/api/networks/net-missing/plan", "{\"caseIds\": [\"P1\"], \"method\": \"GREEDY\"}")
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void wholeNetworkComparisonShowsTheGreedyTrap() throws Exception {
+        String id = loadSample("greedy-worst-case-12");
+        mvc.perform(post("/api/networks/" + id + "/compare-all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.targetLinks").value(115))
+                .andExpect(jsonPath("$.methods[1].doses").value(12))
+                .andExpect(jsonPath("$.methods[2].method").value("GREEDY"))
+                .andExpect(jsonPath("$.methods[2].doses").value(23));
+    }
+
+    @Test
+    void wholeNetworkComparisonReportsTheExactRefusal() throws Exception {
+        String id = loadSample("greedy-worst-case-18");
+        mvc.perform(post("/api/networks/" + id + "/compare-all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.methods[1].error", containsString("at most 40")))
+                .andExpect(jsonPath("$.methods[2].doses").value(40));
+        mvc.perform(post("/api/networks/net-missing/compare-all")).andExpect(status().isNotFound());
+    }
 }
