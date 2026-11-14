@@ -19,7 +19,7 @@ const dayFormat = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'lon
  * "possibly exposed" is checked against the exact records before the final answer.
  */
 export function ExposurePage() {
-  const { network, restoring } = useWorkspace()
+  const { network, cases, restoring } = useWorkspace()
   const [mode, setMode] = useState('visits')
   const [visits, setVisits] = useState([{ venueId: 'V002', date: '2026-11-01', start: '18:30', end: '19:15' }])
   const [personId, setPersonId] = useState('P031')
@@ -36,11 +36,13 @@ export function ExposurePage() {
     setLoading(true)
     setResult(null)
     try {
+      // The cases marked in the app (by default the ones from cases.csv).
+      const base = { networkId: network.networkId, ...(cases.length > 0 && { caseIds: cases }) }
       const request =
         mode === 'person'
-          ? { networkId: network.networkId, personId: personId.trim() }
+          ? { ...base, personId: personId.trim() }
           : {
-              networkId: network.networkId,
+              ...base,
               visits: visits.map((v) => ({ venueId: v.venueId.trim(), start: `${v.date}T${v.start}`, end: `${v.date}T${v.end}` })),
             }
       setResult(await checkExposure(request))
