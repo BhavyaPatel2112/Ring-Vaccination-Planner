@@ -18,6 +18,7 @@ import com.ringvax.engine.cover.ApproxVertexCover;
 import com.ringvax.engine.cover.CoverChoice;
 import com.ringvax.engine.cover.ExactSolverLimitException;
 import com.ringvax.engine.cover.ExactVertexCover;
+import com.ringvax.engine.cover.GreedyVertexCover;
 import com.ringvax.engine.cover.VertexCoverSolver;
 import com.ringvax.engine.graph.Contact;
 import com.ringvax.engine.graph.ContactGraph;
@@ -35,13 +36,14 @@ public class PlanService {
     public static final long DEFAULT_SEED = 2026;
 
     private final NetworkService networks;
-    /** Vertex cover methods by API name. The greedy baseline is added here when it is ready. */
+    /** Vertex cover methods by API name, in the order they are compared. */
     private final Map<String, Supplier<VertexCoverSolver>> methods = new LinkedHashMap<>();
 
     public PlanService(NetworkService networks) {
         this.networks = networks;
         methods.put(ApproxVertexCover.NAME, ApproxVertexCover::new);
         methods.put(ExactVertexCover.NAME, ExactVertexCover::new);
+        methods.put(GreedyVertexCover.NAME, GreedyVertexCover::new);
     }
 
     public List<String> availableMethods() {
@@ -77,8 +79,13 @@ public class PlanService {
             doses.add(new PlanResponse.Dose(g.person(choice.person()).id(), g.person(choice.person()).name(),
                     choice.reason().name(), choice.explanation()));
         }
-        Double ratio = plan.lowerBound() <= 0 ? (plan.doses() == 0 ? 1.0 : null)
-                : (double) plan.dosesForFullPlan() / plan.lowerBound();
+        // Written out with if statements: "cond ? 1.0 : null" would unbox null and throw.
+        Double ratio = null;
+        if (plan.lowerBound() > 0) {
+            ratio = (double) plan.dosesForFullPlan() / plan.lowerBound();
+        } else if (plan.doses() == 0) {
+            ratio = 1.0;
+        }
         return new PlanResponse(plan.method(), plan.doses(), plan.dosesForFullPlan(), plan.budget(), plan.complete(),
                 plan.budgetLimited(), ring.targetContacts().length, doses, links(g, plan.unprotectedContacts()),
                 links(g, plan.unprotectableContacts()), ids(g, plan.ring1NotVaccinated()), plan.lowerBound(), ratio,
@@ -108,8 +115,12 @@ public class PlanService {
                 results.add(new CompareResponse.MethodResult(name, null, null, null, null, errors.get(name)));
                 continue;
             }
-            Double ratio = exact == null ? null
-                    : exact.doses() == 0 ? (plan.doses() == 0 ? 1.0 : null) : (double) plan.doses() / exact.doses();
+            Double ratio = null;
+            if (exact != null && exact.doses() > 0) {
+                ratio = (double) plan.doses() / exact.doses();
+            } else if (exact != null && plan.doses() == 0) {
+                ratio = 1.0;
+            }
             Double proven = plan.lowerBound() <= 0 ? null : (double) plan.doses() / plan.lowerBound();
             results.add(new CompareResponse.MethodResult(name, plan.doses(), plan.runtimeNanos() / 1e6, ratio,
                     guarantee(plan, ring.mandatory().length, proven), null));
@@ -147,6 +158,8 @@ public class PlanService {
             }
             case ExactVertexCover.NAME -> text.append("The smallest possible plan for these rings (exact solver, "
                     + ring1 + " ring 1 doses plus a minimum cover).");
+            case GreedyVertexCover.NAME -> text.append("No fixed guarantee: greedy often finds small plans but can be"
+                    + " fooled into using many more doses than needed (it is not bounded by 2 times the minimum).");
             default -> text.append("No fixed guarantee for this method.");
         }
         if (plan.budgetLimited()) {
