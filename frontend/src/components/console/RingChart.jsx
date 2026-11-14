@@ -26,7 +26,12 @@ export function RingChart({ ring }) {
   useEffect(() => {
     const update = () => setColors(readColors())
     window.addEventListener('ringvax-theme', update)
-    return () => window.removeEventListener('ringvax-theme', update)
+    // The saved theme can be applied before this listener exists, so read the colours once after mounting.
+    const frame = requestAnimationFrame(update)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('ringvax-theme', update)
+    }
   }, [])
 
   const ringTwoPlus = ring.rings.slice(1).flat()

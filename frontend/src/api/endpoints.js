@@ -21,9 +21,35 @@ export function uploadNetwork(files, name) {
   return apiPost('/networks', form)
 }
 
-export const buildRing = (networkId, caseIds, depth) => apiPost(`/networks/${networkId}/ring`, { caseIds, depth })
+export const buildRing = (networkId, caseIds, depth, settings = {}) =>
+  apiPost(`/networks/${networkId}/ring`, { caseIds, depth, ...settings })
 
 export const makePlan = (networkId, request) => apiPost(`/networks/${networkId}/plan`, request)
 
-export const compareMethods = (networkId, caseIds, depth) =>
-  apiPost(`/networks/${networkId}/compare`, { caseIds, depth })
+export const compareMethods = (networkId, caseIds, depth, settings = {}) =>
+  apiPost(`/networks/${networkId}/compare`, { caseIds, depth, ...settings })
+
+export const compareAllLinks = (networkId) => apiPost(`/networks/${networkId}/compare-all`)
+
+export const getMethods = () => apiGet('/methods')
+
+// Outbreak clusters (disjoint-set union) and live contact reports.
+export const getClusters = (networkId, caseIds = []) =>
+  apiGet(`/networks/${networkId}/clusters${caseIds.length ? `?caseIds=${caseIds.map(encodeURIComponent).join(',')}` : ''}`)
+export const addContact = (networkId, contact) => apiPost(`/networks/${networkId}/contacts`, contact)
+
+// Vaccinate-by deadlines and the monitoring list.
+export const followUp = (networkId, request) => apiPost(`/networks/${networkId}/follow-up`, request)
+
+// Bloom filter features: exposure self-check, double-dose guard, tuning.
+export const checkExposure = (request) => apiPost('/exposure/check', request)
+export const checkRegistry = (networkId, personIds) => apiPost('/registry/check', { networkId, personIds })
+export const tuneBloom = (settings) => apiPost('/bloom/config', settings)
+export const bloomStats = (networkId) => apiGet(`/bloom/stats?networkId=${encodeURIComponent(networkId)}`)
+
+// Outbreak simulation.
+export const simulate = (networkId, request) => apiPost(`/networks/${networkId}/simulate`, request)
+
+// Benchmarks: saved results from docs/benchmarks, and a quick live run.
+export const getBenchmarks = () => apiGet('/benchmarks')
+export const runBenchmark = (request) => apiPost('/benchmarks/run', request)

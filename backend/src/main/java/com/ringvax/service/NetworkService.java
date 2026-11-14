@@ -64,6 +64,8 @@ public class NetworkService {
             "Built so 'most connected first' picks 23 people against a minimum of 12"});
         SAMPLE_LABELS.put("greedy-worst-case-18", new String[] {"Greedy trap (58 people)",
             "Greedy picks 40 against a minimum of 18, worse than 2 times"});
+        SAMPLE_LABELS.put("sociopatterns-high-school", new String[] {"Real high school (SocioPatterns)",
+            "Face-to-face contacts of about 330 students recorded with wearable sensors (convert it first)"});
     }
 
     private final Map<String, StoredNetwork> networks = new ConcurrentHashMap<>();

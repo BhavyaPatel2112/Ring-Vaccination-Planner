@@ -16,10 +16,11 @@ const linkKey = (a, b) => (a < b ? `${a}~${b}` : `${b}~${a}`)
  * backend: ring levels, plan and unprotected links all come from the Java API.
  *
  * The ref exposes `pointOf(personId)` (screen position of a person, for the
- * callout lines) and `fit()`.
+ * callout lines) and `fit()`. An optional `highlight` set of person ids dims
+ * everyone else (used to show one outbreak cluster).
  */
 export const NetworkCanvas = forwardRef(function NetworkCanvas(
-  { view, ring, plan, cases, selected, hovered, onSelect, onHover, expanded, onToggleExpand },
+  { view, ring, plan, cases, selected, hovered, onSelect, onHover, expanded, onToggleExpand, highlight },
   ref,
 ) {
   const container = useRef(null)
@@ -130,6 +131,7 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
         if (caseSet.has(node.id)) list.push('case')
         else if (l) list.push(l >= 3 ? 'ring3' : `ring${l}`)
         else if (hasRing && ring) list.push('dim')
+        if (highlight && !highlight.has(node.id)) list.push('dim')
         if (node.vaccinated) list.push('vaccinated')
         if (!node.eligible || node.refused) list.push('excluded')
         if (planned.has(node.id)) list.push('planned')
@@ -146,10 +148,11 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
         else if (targets.has(key)) list.push('target')
         else if (caseSet.has(a) || caseSet.has(b)) list.push('caselink')
         else if (ring && !(level.has(a) && level.has(b))) list.push('dim')
+        if (highlight && !(highlight.has(a) && highlight.has(b))) list.push('dim')
         edge.classes(list)
       })
     })
-  }, [classes, view, ring, selected, hovered])
+  }, [classes, view, ring, selected, hovered, highlight])
 
   // Hover card position follows the node.
   useEffect(() => {

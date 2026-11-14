@@ -33,7 +33,8 @@ import com.ringvax.engine.select.RandomizedQuickselect;
  * Experiments: {@code quality} (approximation against exact), {@code exact-growth}
  * (exact solver run time and search size on hard networks, against brute force and
  * the approximation) and {@code selection} (Quickselect against median-of-medians
- * and a full sort). All inputs are seeded, so every run produces the same inputs.
+ * and a full sort). {@code approx-vs-greedy}, {@code dsu} and {@code bloom} are in
+ * {@link ScaleBenchmarks}. All inputs are seeded, so every run produces the same inputs.
  */
 public final class BenchmarkRunner {
 
@@ -45,7 +46,9 @@ public final class BenchmarkRunner {
     public static void main(String[] args) {
         String which = args.length > 0 ? args[0] : "all";
         Path out = Path.of(args.length > 1 ? args[1] : "../docs/benchmarks");
-        writeEnvironment(out);
+        // Running one experiment on its own records its machine in a separate file, so the
+        // environment of earlier results is not overwritten.
+        writeEnvironment(out, which.equals("all") ? "environment.txt" : "environment-" + which + ".txt");
         if (which.equals("all") || which.equals("quality")) {
             quality(out);
         }
@@ -54,6 +57,21 @@ public final class BenchmarkRunner {
         }
         if (which.equals("all") || which.equals("selection")) {
             selection(out);
+        }
+        if (which.equals("all") || which.equals("approx-vs-greedy")) {
+            System.out.println("Approximation against greedy at growing size");
+            ScaleBenchmarks.approxVsGreedy(new int[] {1_000, 10_000, 100_000, 1_000_000}, new Harness(3, 5), SEED)
+                    .write(out.resolve("approx-vs-greedy.csv"));
+        }
+        if (which.equals("all") || which.equals("dsu")) {
+            System.out.println("Union-find against recomputing clusters with BFS");
+            ScaleBenchmarks.dsuVsBfs(new int[] {10_000, 100_000, 1_000_000}, new Harness(3, 5), SEED)
+                    .write(out.resolve("dsu-vs-bfs.csv"));
+        }
+        if (which.equals("all") || which.equals("bloom")) {
+            System.out.println("Bloom filter against a HashSet");
+            ScaleBenchmarks.bloomVsHashSet(new int[] {10_000, 100_000, 1_000_000}, new Harness(3, 5), SEED)
+                    .write(out.resolve("bloom-vs-hashset.csv"));
         }
     }
 
@@ -232,7 +250,7 @@ public final class BenchmarkRunner {
         return copy;
     }
 
-    private static void writeEnvironment(Path out) {
+    private static void writeEnvironment(Path out, String fileName) {
         Runtime runtime = Runtime.getRuntime();
         String text = String.join("\n",
                 "Benchmark run " + LocalDateTime.now().withNano(0),
@@ -245,7 +263,7 @@ public final class BenchmarkRunner {
                 "");
         try {
             Files.createDirectories(out);
-            Files.writeString(out.resolve("environment.txt"), text);
+            Files.writeString(out.resolve(fileName), text);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

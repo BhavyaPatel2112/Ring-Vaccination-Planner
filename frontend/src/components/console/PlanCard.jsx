@@ -24,7 +24,8 @@ export function PlanCard({ delay }) {
         value={method}
         onChange={setMethod}
         options={[
-          { value: 'APPROX', label: 'Approximation' },
+          { value: 'APPROX', label: 'Approx.', ariaLabel: '2-approximation' },
+          { value: 'GREEDY', label: 'Greedy' },
           { value: 'EXACT', label: 'Exact' },
         ]}
       />
@@ -48,7 +49,7 @@ export function PlanCard({ delay }) {
           <div className="flex items-end justify-between gap-3">
             <StatTile label="Doses" value={plan.doses} size="lg" tone="var(--planned)" />
             <div className="pb-2 text-right text-xs text-muted">
-              <p>{plan.method === 'EXACT' ? 'Exact minimum' : '2-approximation'}</p>
+              <p>{plan.method === 'EXACT' ? 'Exact minimum' : plan.method === 'GREEDY' ? 'Greedy (no guarantee)' : '2-approximation'}</p>
               <p>{plan.runtimeMs.toFixed(plan.runtimeMs < 10 ? 2 : 0)} ms in Java</p>
             </div>
           </div>
