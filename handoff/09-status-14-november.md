@@ -27,7 +27,7 @@ Everything in [04-what-tanushree-does-next.md](04-what-tanushree-does-next.md) i
 
 ## Still to do (needs your laptop)
 
-1. ~~**Run the tests and benchmarks on your laptop.**~~ Done on 14 November: tests pass and experiments 4 to 6 were rerun on the demo laptop. `cd backend && ./mvnw test`, then rerun experiments 4 to 6 so every table comes from one machine: `java -Xmx3g -cp target/classes com.ringvax.bench.BenchmarkRunner approx-vs-greedy ../docs/benchmarks` (and `dsu`, `bloom`). Update the numbers in `docs/benchmarks/README.md` if they change.
+1. **Tests and benchmarks on the laptop:** done on 14 November. `./mvnw test` passes and experiments 4 to 6 were rerun on the demo laptop; `docs/benchmarks/README.md` has those numbers.
 2. **SocioPatterns:** download the high school files and run the converter (see `data/sociopatterns/README.md`), then copy the exact licence from the download page into that README.
 3. **Demo rehearsal** (below), the viva for your algorithms, and your sections of the report when the faculty asks.
 4. Optional: marking a refusal from the screen (feature A interactive), described in [07](07-where-your-code-plugs-in.md). Refusals from the CSV already work everywhere.
