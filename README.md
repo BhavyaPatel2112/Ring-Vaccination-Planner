@@ -140,7 +140,7 @@ Sample networks are in [data/sample](data/sample) (all names are made up). `outb
 
 - The 2-approximation was never above 2 times the minimum on 420 networks (mean 1.36 to 1.65), and plans for a million contacts in 18 ms.
 - Greedy uses about 19% fewer doses on realistic towns but has no guarantee: 23 against a minimum of 12, and 40 against 18, on the trap samples.
-- Union-find updates a cluster in about 0.01 µs; recomputing clusters with BFS takes 50 ms per update at a million contacts.
+- Union-find updates a cluster in about 0.02 µs; recomputing clusters with BFS takes 65 ms per update at a million contacts.
 - The Bloom filter's measured false positive rate is within 3% of the formula, with 84 to 88 times less memory than a HashSet. Every hit is confirmed exactly.
 - In the simulation of the sample outbreak, the ring plan cuts average new infections by about 94% against no vaccination, and by about 80% against the same number of random doses.
 

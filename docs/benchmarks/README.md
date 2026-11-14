@@ -25,7 +25,7 @@ Replace `all` with `quality`, `exact-growth`, `selection`, `approx-vs-greedy`, `
 | [dsu-vs-bfs.csv](dsu-vs-bfs.csv) | Union-find cluster updates against recomputing clusters with BFS |
 | [bloom-vs-hashset.csv](bloom-vs-hashset.csv) | Bloom filter accuracy, memory and lookup time against a HashSet |
 
-Experiments 4 to 6 (Tanushree's) were first measured on a 2-core Linux machine with Java 21 (the same seeds); rerun them on the demo laptop before submitting so every table comes from one machine. The numbers below are from that first run.
+Experiments 4 to 6 were measured on the demo laptop (Apple Silicon, 8 cores, Java 17.0.18); their machine details are in the `environment-*.txt` files.
 
 ## 1. Approximation quality against the exact minimum
 
@@ -101,13 +101,13 @@ Seeded synthetic towns (households, schools, workplaces, community links) with a
 
 | Contacts | People | Approximation (ms) | Greedy (ms) | Approximation doses | Greedy doses | Greedy ÷ approximation |
 |---|---|---|---|---|---|---|
-| 1,000 | 200 | 0.12 | 0.36 | 190 | 157 | 0.83 |
-| 10,000 | 2,000 | 0.76 | 2.70 | 1,886 | 1,527 | 0.81 |
-| 100,000 | 20,000 | 3.68 | 18.96 | 18,766 | 15,284 | 0.81 |
-| 1,000,000 | 200,000 | 18.28 | 417.11 | 187,690 | 152,636 | 0.81 |
+| 1,000 | 200 | 0.17 | 0.55 | 190 | 157 | 0.83 |
+| 10,000 | 2,000 | 1.53 | 2.08 | 1,886 | 1,527 | 0.81 |
+| 100,000 | 20,000 | 4.11 | 20.40 | 18,766 | 15,284 | 0.81 |
+| 1,000,000 | 200,000 | 17.97 | 326.83 | 187,690 | 152,636 | 0.81 |
 
 **Reading.**
-- **Run time.** The approximation grows linearly (about 10× per 10× more contacts, 18 ms at a million contacts, well under the 2-second target). Greedy grows faster, as O((V + E) log V) predicts: every heap operation costs log V, and at a million contacts it is 23 times slower.
+- **Run time.** The approximation grows roughly linearly (18 ms at a million contacts, well under the 2-second target). Greedy grows faster, as O((V + E) log V) predicts: every heap operation costs log V, and at a million contacts it is 18 times slower.
 - **Plan size.** On these realistic towns greedy needs about 19% fewer doses than the approximation. That is the honest result: greedy is a good heuristic on typical networks.
 - **But greedy has no guarantee.** On the greedy trap samples it picks 23 people where 12 are enough and 40 where 18 are enough (2.22×, worse than the approximation's proven bound of 2). The approximation is never above 2× on any input, and it gives a lower bound (the matching size) that proves how far from the minimum each plan can be. That is why the app uses the approximation for the plan and shows greedy as the comparison.
 
@@ -117,13 +117,13 @@ A synthetic town of the given size; its contacts arrive one by one. Union-find d
 
 | Contacts | People | Union-find, all updates (ms) | Union-find per update (µs) | BFS per update (ms) | BFS for all updates (estimate) | Clusters |
 |---|---|---|---|---|---|---|
-| 10,000 | 2,500 | 0.28 | 0.028 | 0.45 | 4.5 s | 1 |
-| 100,000 | 25,000 | 1.60 | 0.016 | 5.00 | 8.3 min | 3 |
-| 1,000,000 | 250,000 | 9.76 | 0.010 | 49.95 | 13.9 hours | 27 |
+| 10,000 | 2,500 | 0.60 | 0.060 | 0.74 | 7.4 s | 1 |
+| 100,000 | 25,000 | 1.78 | 0.018 | 7.89 | 13.2 min | 3 |
+| 1,000,000 | 250,000 | 22.63 | 0.023 | 64.58 | 17.9 hours | 27 |
 
 **Reading.**
-- **Union-find is effectively constant per update.** The per-update time does not grow with the network (it even falls, as the JIT warms up), matching the amortised O(α(n)) bound from union by rank plus path compression.
-- **BFS grows linearly per update**, so over all updates it is quadratic. At a million contacts, one update takes about 50 ms with BFS against 0.01 µs with union-find, and processing every contact report would take about 14 hours instead of 10 ms.
+- **Union-find is effectively constant per update.** The per-update time stays at a few hundredths of a microsecond as the network grows 100 times (the smallest run is the least warmed up), matching the amortised O(α(n)) bound from union by rank plus path compression.
+- **BFS grows linearly per update**, so over all updates it is quadratic. At a million contacts, one update takes about 65 ms with BFS against 0.02 µs with union-find, and processing every contact report would take about 18 hours instead of 23 ms.
 - Both methods find the same number of clusters (the benchmark checks this).
 
 ## 6. Bloom filter against a HashSet
@@ -132,9 +132,9 @@ Keys shaped like the exposure keys (venue plus hour). Each filter is sized for a
 
 | Keys | Bits | k | Theory | Measured | Difference | Bloom memory | HashSet memory (estimate) | Memory saved | Lookup, filter | Lookup, HashSet |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 10,000 | 95,851 | 7 | 1.00% | 1.01% | 1.1% | 11.7 KB | 986 KB | 84× | 76 ns | 10 ns |
-| 100,000 | 958,506 | 7 | 1.00% | 1.02% | 1.5% | 117 KB | 9.6 MB | 84× | 129 ns | 31 ns |
-| 1,000,000 | 9,585,059 | 7 | 1.00% | 0.98% | 2.6% | 1.1 MB | 100.5 MB | 88× | 108 ns | 18 ns |
+| 10,000 | 95,851 | 7 | 1.00% | 1.01% | 1.1% | 11.7 KB | 986 KB | 84× | 88 ns | 13 ns |
+| 100,000 | 958,506 | 7 | 1.00% | 1.02% | 1.5% | 117 KB | 9.6 MB | 84× | 122 ns | 65 ns |
+| 1,000,000 | 9,585,059 | 7 | 1.00% | 0.98% | 2.6% | 1.1 MB | 100.5 MB | 88× | 169 ns | 29 ns |
 
 **Reading.**
 - **The formula holds.** The measured false positive rate is within 3% (relative) of (1 − e^(−kn/m))^k at every size, well inside the 20% target. There were no false negatives.

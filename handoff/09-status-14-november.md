@@ -22,12 +22,12 @@ Everything in [04-what-tanushree-does-next.md](04-what-tanushree-does-next.md) i
 
 ## Findings worth saying in the demo
 
-- Greedy uses about 19% fewer doses than the 2-approximation on realistic towns, but it has no guarantee: on the trap samples it needs 23 against 12 and 40 against 18. The approximation is never above 2 times the minimum and is 23 times faster at a million contacts.
+- Greedy uses about 19% fewer doses than the 2-approximation on realistic towns, but it has no guarantee: on the trap samples it needs 23 against 12 and 40 against 18. The approximation is never above 2 times the minimum and is 18 times faster at a million contacts.
 - The Bloom filter saves 84 to 88 times the memory of a HashSet, with the measured false positive rate within 3% of the formula. A HashSet lookup is faster (Java caches String hashes), so the filter's advantage is memory, not speed.
 
 ## Still to do (needs your laptop)
 
-1. **Run the tests and benchmarks on your laptop.** `cd backend && ./mvnw test`, then rerun experiments 4 to 6 so every table comes from one machine: `java -Xmx3g -cp target/classes com.ringvax.bench.BenchmarkRunner approx-vs-greedy ../docs/benchmarks` (and `dsu`, `bloom`). Update the numbers in `docs/benchmarks/README.md` if they change.
+1. ~~**Run the tests and benchmarks on your laptop.**~~ Done on 14 November: tests pass and experiments 4 to 6 were rerun on the demo laptop. `cd backend && ./mvnw test`, then rerun experiments 4 to 6 so every table comes from one machine: `java -Xmx3g -cp target/classes com.ringvax.bench.BenchmarkRunner approx-vs-greedy ../docs/benchmarks` (and `dsu`, `bloom`). Update the numbers in `docs/benchmarks/README.md` if they change.
 2. **SocioPatterns:** download the high school files and run the converter (see `data/sociopatterns/README.md`), then copy the exact licence from the download page into that README.
 3. **Demo rehearsal** (below), the viva for your algorithms, and your sections of the report when the faculty asks.
 4. Optional: marking a refusal from the screen (feature A interactive), described in [07](07-where-your-code-plugs-in.md). Refusals from the CSV already work everywhere.
