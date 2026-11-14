@@ -132,10 +132,14 @@ public final class ScaleBenchmarks {
 
     // ------------------------------------------------------------------ Bloom filter against HashSet
 
-    /** Filters sized for a 1% false positive rate with the optimal k, against a HashSet of the same keys. */
+    /**
+     * Filters sized for a 1% false positive rate with the optimal k, against a HashSet of the same keys.
+     * The HashSet memory is the per-key estimate from {@link BloomExperiment}; measuring heap use directly
+     * depends on when the garbage collector runs and was too noisy to report.
+     */
     public static CsvTable bloomVsHashSet(int[] keyCounts, Harness harness, long seed) {
         CsvTable table = new CsvTable("keys", "bits", "k", "theoretical_rate", "measured_rate", "relative_error",
-                "bloom_bytes", "hashset_bytes_estimate", "hashset_bytes_measured", "memory_ratio", "bloom_query_ns",
+                "bloom_bytes", "hashset_bytes_estimate", "memory_ratio", "bloom_query_ns",
                 "hashset_query_ns");
         for (int n : keyCounts) {
             long m = BloomFilter.optimalBits(n, 0.01);
@@ -153,11 +157,9 @@ public final class ScaleBenchmarks {
             }
             BloomFilter filter = new BloomFilter(m, k);
             Set<String> set = new HashSet<>();
-            long before = usedMemory();
             for (String key : keys) {
                 set.add(key);
             }
-            long measured = Math.max(0, usedMemory() - before);
             for (String key : keys) {
                 filter.add(key);
             }
@@ -179,7 +181,7 @@ public final class ScaleBenchmarks {
             double relative = r.theoreticalRate() == 0 ? 0 : Math.abs(r.measuredRate() - r.theoreticalRate())
                     / r.theoreticalRate();
             table.add(n, m, k, r.theoreticalRate(), r.measuredRate(), relative, r.bloomBytes(), r.hashSetBytes(),
-                    measured, (double) r.hashSetBytes() / r.bloomBytes(), bloomQuery.median() / (double) probes.length,
+                    (double) r.hashSetBytes() / r.bloomBytes(), bloomQuery.median() / (double) probes.length,
                     setQuery.median() / (double) probes.length);
             log("  keys=%,10d  theory %.4f%%  measured %.4f%%  bloom %,d B  hash set ~%,d B (%.1fx)", n,
                     r.theoreticalRate() * 100, r.measuredRate() * 100, r.bloomBytes(), r.hashSetBytes(),
@@ -189,14 +191,6 @@ public final class ScaleBenchmarks {
     }
 
     // ------------------------------------------------------------------ helpers
-
-    private static long usedMemory() {
-        Runtime runtime = Runtime.getRuntime();
-        for (int i = 0; i < 3; i++) {
-            System.gc();
-        }
-        return runtime.totalMemory() - runtime.freeMemory();
-    }
 
     private static void check(boolean ok, String message) {
         if (!ok) {

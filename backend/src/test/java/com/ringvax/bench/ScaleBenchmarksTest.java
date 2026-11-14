@@ -37,7 +37,7 @@ class ScaleBenchmarksTest {
         System.setProperty("ringvax.bench.quiet", "true");
         String csv = ScaleBenchmarks.bloomVsHashSet(new int[] {5000}, quick, 1).toCsv();
         String[] row = csv.split("\n")[1].split(",");
-        double ratio = Double.parseDouble(row[9]);
+        double ratio = Double.parseDouble(row[8]);
 
         assertTrue(ratio > 5, "memory ratio " + ratio);
     }
