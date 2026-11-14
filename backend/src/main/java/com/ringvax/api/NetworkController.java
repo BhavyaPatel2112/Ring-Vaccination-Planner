@@ -51,7 +51,8 @@ public class NetworkController {
     @ResponseStatus(HttpStatus.CREATED)
     public NetworkSummary generate(@Valid @RequestBody GenerateRequest request) {
         long seed = request.seed() == null ? PlanService.DEFAULT_SEED : request.seed();
-        return networks.generate(request.population(), request.avgContacts(), seed, request.name());
+        int cases = request.cases() == null ? NetworkService.GENERATED_CASES : request.cases();
+        return networks.generate(request.population(), request.avgContacts(), seed, request.name(), cases);
     }
 
     @GetMapping("/samples")

@@ -47,6 +47,9 @@ import com.ringvax.engine.graph.Person;
 @Service
 public class NetworkService {
 
+    /** Confirmed cases marked in a generated town unless the request says otherwise. */
+    public static final int GENERATED_CASES = 2;
+
     /** Above this many people the drawing is sampled around the cases. */
     public static final int MAX_VIEW_NODES = 1500;
 
@@ -57,13 +60,14 @@ public class NetworkService {
             "40 people in 10 households, a school, a bus route and a clinic, with 2 confirmed cases"});
         SAMPLE_LABELS.put("validation-demo", new String[] {"Messy data",
             "One example of every input problem, to show how bad rows are reported"});
-        SAMPLE_LABELS.put("star", new String[] {"Star", "One hub with 7 contacts: the 2-approximation's worst case"});
+        SAMPLE_LABELS.put("star", new String[] {"Star",
+            "One hub with 7 contacts and a case at the edge: one dose for the hub protects everyone"});
         SAMPLE_LABELS.put("complete-bipartite-3-3", new String[] {"Two groups of three",
-            "Everyone meets everyone in the other group (minimum 3)"});
+            "Everyone meets everyone in the other group; the case's whole other group is ring 1"});
         SAMPLE_LABELS.put("greedy-worst-case-12", new String[] {"Greedy trap (35 people)",
-            "Built so 'most connected first' picks 23 people against a minimum of 12"});
+            "Built to fool greedy: around case P012 it needs 23 doses where 16 are enough"});
         SAMPLE_LABELS.put("greedy-worst-case-18", new String[] {"Greedy trap (58 people)",
-            "Greedy picks 40 against a minimum of 18, worse than 2 times"});
+            "A larger trap: around case P011 greedy needs 40 doses where 32 are enough"});
         SAMPLE_LABELS.put("sociopatterns-high-school", new String[] {"Real high school (SocioPatterns)",
             "Face-to-face contacts of about 330 students recorded with wearable sensors (convert it first)"});
     }
@@ -114,13 +118,22 @@ public class NetworkService {
         return summary(stored);
     }
 
-    /** Builds a seeded synthetic network. */
+    /** Builds a seeded synthetic network with {@link #GENERATED_CASES} confirmed cases. */
     public NetworkSummary generate(int population, double avgContacts, long seed, String name) {
+        return generate(population, avgContacts, seed, name, GENERATED_CASES);
+    }
+
+    /**
+     * Builds a seeded synthetic network and marks {@code caseCount} people as confirmed
+     * cases, so the rings and the plan have something to show straight away.
+     */
+    public NetworkSummary generate(int population, double avgContacts, long seed, String name, int caseCount) {
         ContactGraph graph = SyntheticNetworkGenerator.generate(population, avgContacts, seed);
-        List<QualityWarning> quality = new ContactQualityCheck(seed).check(graph, List.of(), LocalDate.now(clock));
+        List<ConfirmedCase> cases = pickCases(graph, caseCount, seed);
+        List<QualityWarning> quality = new ContactQualityCheck(seed).check(graph, cases, LocalDate.now(clock));
         String label = blankToDefault(name, "Synthetic town of " + population + " people");
         String id = newId();
-        StoredNetwork stored = new StoredNetwork(id, label, "generated", graph, List.of(), List.of(), List.of(),
+        StoredNetwork stored = new StoredNetwork(id, label, "generated", graph, cases, List.of(), List.of(),
                 quality, LocalDateTime.now(clock));
         networks.put(id, stored);
         return summary(stored);
@@ -244,6 +257,33 @@ public class NetworkService {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    /**
+     * Seeded choice of confirmed cases among people with at least two contacts (so there
+     * are rings to plan). They are confirmed the day after the latest contact.
+     */
+    static List<ConfirmedCase> pickCases(ContactGraph graph, int count, long seed) {
+        List<Integer> candidates = new ArrayList<>();
+        LocalDate latest = null;
+        for (int p = 0; p < graph.personCount(); p++) {
+            if (graph.degree(p) >= 2) {
+                candidates.add(p);
+            }
+        }
+        for (Contact c : graph.contacts()) {
+            if (c.date() != null && (latest == null || c.date().isAfter(latest))) {
+                latest = c.date();
+            }
+        }
+        LocalDate confirmed = latest == null ? null : latest.plusDays(1);
+        java.util.Random random = new java.util.Random(seed);
+        List<ConfirmedCase> cases = new ArrayList<>();
+        for (int i = 0; i < count && !candidates.isEmpty(); i++) {
+            int person = candidates.remove(random.nextInt(candidates.size()));
+            cases.add(new ConfirmedCase(graph.person(person).id(), confirmed));
+        }
+        return cases;
+    }
 
     private NetworkSummary summary(StoredNetwork n) {
         return new NetworkSummary(n.id(), n.name(), n.source(), n.graph().personCount(), n.graph().contactCount(),

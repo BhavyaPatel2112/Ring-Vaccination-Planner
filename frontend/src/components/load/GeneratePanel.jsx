@@ -43,7 +43,7 @@ export function GeneratePanel({ onGenerate, busy, delay }) {
         </label>
         <p className="text-xs text-muted">
           About {formatNumber(Math.round((population * contacts) / 2))} contacts. Households of 2 to 6, schools and
-          workplaces of 20 to 200, plus community links.
+          workplaces of 20 to 200, plus community links. Two people start as confirmed cases.
         </p>
       </div>
       <div className="mt-auto pt-3">

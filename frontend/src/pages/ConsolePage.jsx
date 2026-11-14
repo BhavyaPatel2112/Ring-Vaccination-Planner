@@ -77,7 +77,7 @@ export function ConsolePage() {
         <div className="pointer-events-none absolute top-3 left-3 flex flex-wrap gap-2">
           <Chip>{formatNumber(network.people)} people</Chip>
           <Chip>{formatNumber(network.contacts)} contacts</Chip>
-          <Chip tone="var(--case)">{cases.length} cases</Chip>
+          <Chip tone="var(--case)">{cases.length} {cases.length === 1 ? 'case' : 'cases'}</Chip>
           {ring && <Chip tone="var(--ring2)">{ring.targetLinks.length} links to protect</Chip>}
           {view.sampled && <Chip>Showing {formatNumber(view.nodes.length)} nearest people</Chip>}
         </div>
