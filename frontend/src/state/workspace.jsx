@@ -37,6 +37,10 @@ export function WorkspaceProvider({ children }) {
   const [busy, setBusy] = useState(null)
   const [backendDown, setBackendDown] = useState(false)
   const [restoring, setRestoring] = useState(true)
+  // Contact definition settings (feature E): { minDurationMinutes, windowDays }, empty for "every contact counts".
+  const [contactSettings, setContactSettingsValue] = useState({})
+  // Bumped when the network changes on the server (a live contact), so the rings are rebuilt.
+  const [version, setVersion] = useState(0)
   const ringRequest = useRef(0)
 
   const report = useCallback((error, title) => {
@@ -108,14 +112,14 @@ export function WorkspaceProvider({ children }) {
     if (!network || cases.length === 0) return
     const id = ++ringRequest.current
     api
-      .buildRing(network.networkId, cases, depth)
+      .buildRing(network.networkId, cases, depth, contactSettings)
       .then((result) => {
         if (id === ringRequest.current) setRing(result)
       })
       .catch((error) => {
         if (id === ringRequest.current) report(error, 'Could not build the rings')
       })
-  }, [network, cases, depth, report])
+  }, [network, cases, depth, contactSettings, version, report])
 
   // Changing the cases or the depth makes an existing plan out of date.
   const toggleCase = useCallback((personId) => {
@@ -133,15 +137,30 @@ export function WorkspaceProvider({ children }) {
       run(
         'plan',
         async () => {
-          const result = await api.makePlan(network.networkId, { caseIds: cases, depth, method, ...options })
+          const result = await api.makePlan(network.networkId, { caseIds: cases, depth, method, ...contactSettings, ...options })
           setPlan(result)
           toast.success(`Plan ready: ${result.doses} doses`, { description: result.guarantee })
           return result
         },
         'Could not make the plan',
       ),
-    [run, network, cases, depth, method],
+    [run, network, cases, depth, method, contactSettings],
   )
+
+  const setContactSettings = useCallback((settings) => {
+    setPlan(null)
+    setContactSettingsValue(settings)
+  }, [])
+
+  // Re-reads the network after it changed on the server (for example a live contact report).
+  const refresh = useCallback(async () => {
+    if (!network) return
+    const [summary, networkView] = await Promise.all([api.getSummary(network.networkId), api.getNetworkView(network.networkId)])
+    setNetwork(summary)
+    setView(networkView)
+    setPlan(null)
+    setVersion((v) => v + 1)
+  }, [network])
 
   const people = useMemo(() => {
     const byId = new Map()
@@ -159,6 +178,7 @@ export function WorkspaceProvider({ children }) {
     ring: cases.length > 0 ? ring : null,
     plan,
     method,
+    contactSettings,
     busy,
     backendDown,
     restoring,
@@ -170,6 +190,8 @@ export function WorkspaceProvider({ children }) {
     generate,
     switchNetwork,
     createPlan,
+    setContactSettings,
+    refresh,
   }
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>
 }
