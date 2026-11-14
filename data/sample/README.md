@@ -25,7 +25,7 @@ A neighbourhood of 40 people in 10 households, with 73 contacts and 2 confirmed 
   | V005 | Lakeview Mall food court |
   | V006 | Bus depot canteen |
 
-  Some visits overlap a case's visit (P006, P015, P031, P029, P032, P038) and some do not (P020 the next day, P033 at a venue with no case, P036 after the case left).
+  Some visits overlap a case's visit (P006, P029, P031, P032, P038) and some do not (P015 at the market in the morning, before the case's evening visit; P020 the next day; P033 at a venue with no case; P036 after the case left).
 
 ## validation-demo
 
