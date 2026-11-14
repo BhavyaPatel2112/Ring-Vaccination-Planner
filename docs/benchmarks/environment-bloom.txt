@@ -1,0 +1,7 @@
+Benchmark run 2026-11-14T19:49:11
+Java 17.0.18 (OpenJDK 64-Bit Server VM)
+OS Mac OS X 26.6.2 aarch64
+CPU cores 8
+Max heap 3072 MB
+JVM arguments [-Xmx3g]
+Seed 2026
