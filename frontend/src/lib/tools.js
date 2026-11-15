@@ -1,10 +1,8 @@
 import {
   CalendarClock,
   ChartColumn,
-  FileUp,
   Filter,
   GraduationCap,
-  Network,
   Scale,
   ShieldCheck,
   Sparkles,
@@ -13,19 +11,18 @@ import {
 } from 'lucide-react'
 
 /**
- * Every screen in the app. `ready: true` screens show a placeholder until they
- * are built; they keep the same layout and components.
+ * Every screen in the All tools menu. Load data, Network and Story are in the
+ * top bar instead, so they are not repeated here. `needsNetwork` screens only
+ * work once a network is loaded; until then the menu shows them locked.
  */
 export const TOOLS = [
-  { path: '/load', title: 'Load data', description: 'Samples, your CSV files or a synthetic town', icon: FileUp, ready: true },
-  { path: '/network', title: 'Network and rings', description: 'Mark cases and see ring 1 and ring 2', icon: Network, ready: true },
-  { path: '/plan', title: 'Plan details', description: 'Who to vaccinate, why, and the dose budget', icon: ShieldCheck, ready: true },
-  { path: '/compare', title: 'Compare methods', description: 'Approximation, greedy and exact side by side', icon: Scale, ready: true },
-  { path: '/clusters', title: 'Outbreak clusters', description: 'Connected groups, updated as contacts arrive', icon: UsersRound, ready: true },
-  { path: '/follow-up', title: 'Deadlines and monitoring', description: 'Vaccinate-by dates and who to watch', icon: CalendarClock, ready: true },
-  { path: '/exposure', title: 'Exposure self-check', description: 'Public check of venue visits', icon: Sparkles, ready: true },
+  { path: '/plan', needsNetwork: true, title: 'Plan details', description: 'Who to vaccinate, why, and the dose budget', icon: ShieldCheck, ready: true },
+  { path: '/compare', needsNetwork: true, title: 'Compare methods', description: 'Approximation, greedy and exact side by side', icon: Scale, ready: true },
+  { path: '/clusters', needsNetwork: true, title: 'Outbreak clusters', description: 'Connected groups, updated as contacts arrive', icon: UsersRound, ready: true },
+  { path: '/follow-up', needsNetwork: true, title: 'Deadlines and monitoring', description: 'Vaccinate-by dates and who to watch', icon: CalendarClock, ready: true },
+  { path: '/exposure', needsNetwork: true, title: 'Exposure self-check', description: 'Public check of venue visits', icon: Sparkles, ready: true },
   { path: '/bloom', title: 'Bloom filter tuning', description: 'Memory against false positive rate', icon: Filter, ready: true },
-  { path: '/simulation', title: 'Outbreak simulation', description: 'Infections under each plan', icon: Waves, ready: true },
-  { path: '/how-it-works', title: 'How it works', description: 'Step through the algorithms one decision at a time', icon: GraduationCap, ready: true },
+  { path: '/simulation', needsNetwork: true, title: 'Outbreak simulation', description: 'Infections under each plan', icon: Waves, ready: true },
+  { path: '/how-it-works', needsNetwork: true, title: 'How it works', description: 'Step through the algorithms one decision at a time', icon: GraduationCap, ready: true },
   { path: '/benchmarks', title: 'Benchmarks', description: 'Run times and approximation quality', icon: ChartColumn, ready: true },
 ]

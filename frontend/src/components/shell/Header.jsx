@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { ChevronDown, LayoutGrid, Moon, Plus, Sun, Syringe } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, useNavigate } from 'react-router'
+import { Link, NavLink, useNavigate } from 'react-router'
 import { listNetworks } from '../../api/endpoints.js'
 import { cn } from '../../lib/cn.js'
 import { formatNumber, initials } from '../../lib/format.js'
@@ -14,17 +14,21 @@ export function Header() {
   return (
     <header className="relative z-30 px-4 pt-4">
       <div className="glass mx-auto flex h-14 max-w-[1600px] items-center gap-3 rounded-full py-2 pr-2 pl-2">
-        <div className="flex items-center gap-2.5 pr-2">
+        <Link to="/" className="flex items-center gap-2.5 rounded-full pr-2" aria-label="Ring Vaccination Planner, home">
           <span className="grid size-10 place-items-center rounded-full bg-case/12 text-case">
             <Syringe className="size-[18px]" />
           </span>
           <span className="hidden text-[15px] font-semibold tracking-tight sm:block">Ring Vaccination Planner</span>
-        </div>
+        </Link>
         <span className="hidden h-6 w-px bg-[var(--glass-border)] sm:block" />
         <NetworkSwitcher />
         <nav aria-label="Main" className="ml-auto flex items-center gap-1">
+          <TopLink to="/" end>
+            Home
+          </TopLink>
           <TopLink to="/load">Load data</TopLink>
           <TopLink to="/network">Network</TopLink>
+          <TopLink to="/story">Story</TopLink>
           <button
             type="button"
             onClick={() => setTools(true)}
@@ -41,10 +45,11 @@ export function Header() {
   )
 }
 
-function TopLink({ to, children }) {
+function TopLink({ to, end, children }) {
   return (
     <NavLink
       to={to}
+      end={end}
       className={({ isActive }) =>
         cn(
           'flex h-10 items-center rounded-full px-4 text-sm font-semibold transition',

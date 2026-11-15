@@ -1,11 +1,17 @@
 import { motion } from 'motion/react'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router'
+import { cn } from '../../lib/cn.js'
 import { TOOLS } from '../../lib/tools.js'
+import { useWorkspace } from '../../state/context.js'
 
-/** Every screen in the app, as a grid of tiles. */
+/**
+ * The other screens, as a grid of tiles. Screens that need a network are
+ * locked until one is loaded, instead of silently sending you to Load data.
+ */
 export function Launcher({ onClose }) {
   const navigate = useNavigate()
+  const { network } = useWorkspace()
   return (
     <motion.div
       className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4 backdrop-blur-sm"
@@ -32,35 +38,60 @@ export function Launcher({ onClose }) {
             Close
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {TOOLS.map((tool, i) => (
-            <motion.button
-              key={tool.path}
+        {!network && (
+          <p className="mb-3 text-sm text-muted">
+            Load a network first to open the locked tools.{' '}
+            <button
               type="button"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.03 * i }}
+              className="font-semibold text-accent hover:underline"
               onClick={() => {
                 onClose()
-                navigate(tool.path)
+                navigate('/load')
               }}
-              className="inset group flex items-center gap-3 rounded-2xl p-3 text-left transition hover:border-accent/40 hover:bg-accent-soft"
             >
-              <span className="glass grid size-10 shrink-0 place-items-center rounded-full">
-                <tool.icon className="size-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2 text-sm font-semibold">
-                  {tool.title}
-                  {!tool.ready && (
-                    <span className="rounded-full bg-inset px-2 py-0.5 text-xs font-semibold text-faint">Next</span>
-                  )}
+              Load data
+            </button>
+          </p>
+        )}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {TOOLS.map((tool, i) => {
+            const locked = tool.needsNetwork && !network
+            return (
+              <motion.button
+                key={tool.path}
+                type="button"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.03 * i }}
+                disabled={locked}
+                title={locked ? 'Load a network first' : undefined}
+                onClick={() => {
+                  onClose()
+                  navigate(tool.path)
+                }}
+                className={cn(
+                  'inset group flex items-center gap-3 rounded-2xl p-3 text-left transition',
+                  locked ? 'cursor-not-allowed opacity-45' : 'hover:border-accent/40 hover:bg-accent-soft',
+                )}
+              >
+                <span className="glass grid size-10 shrink-0 place-items-center rounded-full">
+                  <tool.icon className="size-4" />
                 </span>
-                <span className="block truncate text-xs text-muted">{tool.description}</span>
-              </span>
-              <ArrowUpRight className="size-4 text-faint transition group-hover:text-accent" />
-            </motion.button>
-          ))}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    {tool.title}
+                    {!tool.ready && <span className="rounded-full bg-inset px-2 py-0.5 text-xs font-semibold text-faint">Next</span>}
+                  </span>
+                  <span className="block truncate text-xs text-muted">{locked ? 'Load a network first' : tool.description}</span>
+                </span>
+                {locked ? (
+                  <Lock className="size-4 text-faint" />
+                ) : (
+                  <ArrowUpRight className="size-4 text-faint transition group-hover:text-accent" />
+                )}
+              </motion.button>
+            )
+          })}
         </div>
       </motion.div>
     </motion.div>
