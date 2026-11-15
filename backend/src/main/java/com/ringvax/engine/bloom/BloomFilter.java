@@ -117,6 +117,21 @@ public class BloomFilter {
         return changed;
     }
 
+    /**
+     * The k bit positions of a key, in the order they are computed (they can repeat when
+     * m is small). Used by the "How it works" screen to draw which bits a key touches.
+     */
+    public long[] positions(String key) {
+        byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
+        long h1 = HashFunctions.fnv1a64(bytes);
+        long h2 = (HashFunctions.murmur3(bytes, 0) & 0xffffffffL) | 1L;
+        long[] positions = new long[k];
+        for (int i = 0; i < k; i++) {
+            positions[i] = Math.floorMod(h1 + i * h2, m);
+        }
+        return positions;
+    }
+
     /** False means the key was definitely never added; true means it possibly was. */
     public boolean mightContain(String key) {
         byte[] bytes = key.getBytes(StandardCharsets.UTF_8);

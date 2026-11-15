@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.ringvax.api.dto.RobustnessRequest;
+import com.ringvax.api.dto.RobustnessResponse;
 import com.ringvax.api.dto.SimulateRequest;
 import com.ringvax.api.dto.SimulateResponse;
 import com.ringvax.service.SimulationService;
@@ -26,5 +28,11 @@ public class SimulationController {
     @PostMapping("/simulate")
     public SimulateResponse simulate(@PathVariable String networkId, @Valid @RequestBody SimulateRequest request) {
         return simulations.simulate(networkId, request);
+    }
+
+    /** Infections when the plan is made from incomplete contact data. */
+    @PostMapping("/simulate/robustness")
+    public RobustnessResponse robustness(@PathVariable String networkId, @Valid @RequestBody RobustnessRequest request) {
+        return simulations.robustness(networkId, request);
     }
 }

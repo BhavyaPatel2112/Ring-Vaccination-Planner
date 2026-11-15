@@ -47,8 +47,14 @@ export const checkRegistry = (networkId, personIds) => apiPost('/registry/check'
 export const tuneBloom = (settings) => apiPost('/bloom/config', settings)
 export const bloomStats = (networkId) => apiGet(`/bloom/stats?networkId=${encodeURIComponent(networkId)}`)
 
-// Outbreak simulation.
+// Outbreak simulation, and its robustness to missing contacts.
 export const simulate = (networkId, request) => apiPost(`/networks/${networkId}/simulate`, request)
+export const simulateRobustness = (networkId, request) => apiPost(`/networks/${networkId}/simulate/robustness`, request)
+
+// "How it works": recorded steps of the 2-approximation, and a tiny Bloom filter to draw.
+export const approxWalkthrough = (networkId, caseIds, depth, settings = {}) =>
+  apiPost(`/networks/${networkId}/walkthrough/approx`, { caseIds, depth, ...settings })
+export const bloomDemo = (request) => apiPost('/bloom/demo', request)
 
 // Benchmarks: saved results from docs/benchmarks, and a quick live run.
 export const getBenchmarks = () => apiGet('/benchmarks')

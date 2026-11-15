@@ -2,6 +2,7 @@ package com.ringvax.engine.cover;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.ringvax.engine.graph.Contact;
 import com.ringvax.engine.graph.ContactGraph;
@@ -28,10 +29,24 @@ import com.ringvax.engine.graph.ContactGraph;
  * (optimum 1), and on K(n, n) it takes all 2n people (optimum n).
  *
  * <p>Time complexity: O(V + E) for the target links. Space complexity: O(V).
+ *
+ * <p>{@link #solve(CoverProblem, Consumer)} can also report every step (each forced
+ * person, and each free link with whether it was matched or already protected),
+ * which the "How it works" screen replays.
  */
 public class ApproxVertexCover implements VertexCoverSolver {
 
     public static final String NAME = "APPROX";
+
+    /** What happened at one step of the algorithm. */
+    public enum StepKind { FORCED, MATCHED, ALREADY_PROTECTED }
+
+    /**
+     * One step. For FORCED, {@code person} is the forced person and {@code contact} the link that
+     * forced them; for links, {@code a} and {@code b} are its two people and {@code person} is -1.
+     */
+    public record Step(StepKind kind, int contact, int a, int b, int person) {
+    }
 
     @Override
     public String name() {
@@ -40,6 +55,14 @@ public class ApproxVertexCover implements VertexCoverSolver {
 
     @Override
     public CoverResult solve(CoverProblem problem) {
+        return solve(problem, null);
+    }
+
+    /**
+     * Same as {@link #solve(CoverProblem)}, and reports every step to {@code steps}
+     * (when it is not null) in the order the algorithm takes them.
+     */
+    public CoverResult solve(CoverProblem problem, Consumer<Step> steps) {
         long start = System.nanoTime();
         ContactGraph graph = problem.graph();
         boolean[] inCover = new boolean[graph.personCount()];
@@ -51,6 +74,9 @@ public class ApproxVertexCover implements VertexCoverSolver {
             inCover[p] = true;
             choices.add(new CoverChoice(p, CoverChoice.Reason.FORCED,
                     "Only person who can be vaccinated on the link with " + id(graph, problem.forcedBy(i))));
+            if (steps != null) {
+                steps.accept(new Step(StepKind.FORCED, -1, p, problem.forcedBy(i), p));
+            }
         }
 
         int matched = 0;
@@ -65,6 +91,11 @@ public class ApproxVertexCover implements VertexCoverSolver {
                 String text = "Matched link " + id(graph, u) + " - " + id(graph, v);
                 choices.add(new CoverChoice(u, CoverChoice.Reason.MATCHED, text));
                 choices.add(new CoverChoice(v, CoverChoice.Reason.MATCHED, text));
+                if (steps != null) {
+                    steps.accept(new Step(StepKind.MATCHED, c, u, v, -1));
+                }
+            } else if (steps != null) {
+                steps.accept(new Step(StepKind.ALREADY_PROTECTED, c, u, v, -1));
             }
         }
 

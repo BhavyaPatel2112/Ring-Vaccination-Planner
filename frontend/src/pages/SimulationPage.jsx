@@ -1,10 +1,10 @@
 import { BarElement, CategoryScale, Chart as ChartJS, Filler, Legend, LinearScale, LineElement, PointElement, Tooltip } from 'chart.js'
-import { Play, Settings2, Waves } from 'lucide-react'
+import { Play, Settings2, Unlink, Waves } from 'lucide-react'
 import { useState } from 'react'
 import { Bar, Line } from 'react-chartjs-2'
 import { Navigate } from 'react-router'
 import { toast } from 'sonner'
-import { simulate } from '../api/endpoints.js'
+import { simulate, simulateRobustness } from '../api/endpoints.js'
 import { Field, NeedCases, Page, Pill, TextStat } from '../components/shared/Page.jsx'
 import { Button } from '../components/ui/Button.jsx'
 import { GlassPanel, PanelTitle } from '../components/ui/GlassPanel.jsx'
@@ -28,6 +28,8 @@ export function SimulationPage() {
   const [seed, setSeed] = useState('2026')
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [robust, setRobust] = useState(null)
+  const [robustLoading, setRobustLoading] = useState(false)
 
   if (restoring) return null
   if (!network) return <Navigate to="/load" replace />
@@ -57,6 +59,26 @@ export function SimulationPage() {
       toast.error('Simulation not run', { description: e.message })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const settings = {
+    caseIds: cases,
+    depth,
+    transmission,
+    recoverySteps: recovery,
+    efficacy,
+    seed: seed === '' ? undefined : Number(seed),
+  }
+
+  const runRobustness = async () => {
+    setRobustLoading(true)
+    try {
+      setRobust(await simulateRobustness(network.networkId, { ...settings, trials: Math.min(trials, 200) }))
+    } catch (e) {
+      toast.error('Test not run', { description: e.message })
+    } finally {
+      setRobustLoading(false)
     }
   }
 
@@ -153,6 +175,80 @@ export function SimulationPage() {
               </p>
             </>
           )}
+          <GlassPanel>
+            <PanelTitle
+              icon={Unlink}
+              title="What if contact tracing missed people?"
+              subtitle="The plan is made from part of the contacts; the outbreak spreads along all of them"
+              action={
+                <Button size="sm" variant="primary" loading={robustLoading} onClick={runRobustness}>
+                  {robust ? 'Run again' : 'Run the test'}
+                </Button>
+              }
+            />
+            {!robust && (
+              <p className="text-sm text-muted">
+                Hides 0% to 50% of the contacts from the planner (the same seeded contacts each time, more at each step), then runs
+                the same outbreaks with each plan. It shows how much of the benefit survives when tracing is incomplete.
+              </p>
+            )}
+            {robust && (
+              <>
+                <p className="mb-3 text-sm">{robust.headline}</p>
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+                  <div className="h-64">
+                    <Line
+                      data={{
+                        labels: robust.rows.map((r) => `${Math.round(r.missingShare * 100)}%`),
+                        datasets: [
+                          {
+                            label: 'With the plan',
+                            data: robust.rows.map((r) => r.mean),
+                            borderColor: colors.planned,
+                            backgroundColor: colors.planned,
+                            pointRadius: 4,
+                            tension: 0.25,
+                          },
+                          {
+                            label: 'No vaccination',
+                            data: robust.rows.map(() => robust.noVaccinationMean),
+                            borderColor: colors.case,
+                            backgroundColor: colors.case,
+                            borderDash: [6, 4],
+                            pointRadius: 0,
+                          },
+                        ],
+                      }}
+                      options={chartOptions(colors, {
+                        x: { title: { display: true, text: 'contacts missed by tracing', color: colors['text-muted'] } },
+                        y: { beginAtZero: true, title: { display: true, text: 'average new infections', color: colors['text-muted'] } },
+                      })}
+                    />
+                  </div>
+                  <table className="w-full self-start text-left text-xs">
+                    <thead className="text-muted">
+                      <tr>
+                        <th className="py-1.5 pr-2 font-semibold">Missed</th>
+                        <th className="py-1.5 pr-2 font-semibold">Doses</th>
+                        <th className="py-1.5 pr-2 font-semibold">Infections</th>
+                        <th className="py-1.5 font-semibold">Fewer</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {robust.rows.map((r) => (
+                        <tr key={r.missingShare} className="border-t border-[var(--glass-border)]">
+                          <td className="py-1.5 pr-2">{Math.round(r.missingShare * 100)}%</td>
+                          <td className="py-1.5 pr-2">{r.doses}</td>
+                          <td className="py-1.5 pr-2">{r.mean.toFixed(1)}</td>
+                          <td className="py-1.5">{r.reductionVsNone == null ? '–' : `${r.reductionVsNone.toFixed(0)}%`}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </GlassPanel>
         </div>
       </div>
     </Page>

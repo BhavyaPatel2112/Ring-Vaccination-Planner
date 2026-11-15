@@ -86,6 +86,16 @@ export function buildNetworkStyle() {
     { selector: 'edge.caselink', style: { 'line-color': v('--ring1'), 'line-opacity': 0.7, width: 1.4 } },
     { selector: 'edge.target', style: { 'line-color': v('--ring2'), 'line-opacity': 0.6, width: 1.3 } },
     { selector: 'edge.unprotected', style: { 'line-color': v('--case'), 'line-opacity': 1, width: 2.2 } },
+    { selector: 'edge.covered', style: { 'line-color': v('--vaccinated'), 'line-opacity': 0.75, width: 1.6 } },
+    { selector: 'edge.focus', style: { 'line-color': v('--accent'), 'line-opacity': 1, width: 5, 'z-index': 10 } },
+    {
+      selector: 'edge.focusskip',
+      style: { 'line-color': v('--text-muted'), 'line-opacity': 1, width: 4, 'line-style': 'dashed', 'z-index': 10 },
+    },
+    {
+      selector: 'node.focus',
+      style: { label: 'data(label)', 'underlay-color': v('--accent'), 'underlay-opacity': 0.35, 'underlay-padding': 10, 'z-index': 10 },
+    },
     { selector: 'node.hovered', style: { label: 'data(label)', 'underlay-opacity': 0.3, 'underlay-color': v('--accent') } },
     {
       selector: 'node.selected',

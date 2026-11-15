@@ -41,7 +41,8 @@ Every assessed algorithm has Javadoc with its purpose and time and space complex
 | Deadlines and monitoring | Vaccinate-by deadline per dose (72 hours after exposure), people to watch for 21 days, contact definition settings | Indexed heap |
 | Exposure self-check | Public, phone-friendly: "possibly exposed" from the filter, then the confirmed answer; never names a case | Bloom filter plus exact check |
 | Bloom filter tuning | Sliders for m and k; measured against theoretical false positive rate, memory against a HashSet | Bloom filter |
-| Outbreak simulation | Infections with no vaccination, random doses, and each plan, on the same seeded outbreaks | SIR simulation, Quickselect |
+| Outbreak simulation | Infections with no vaccination, random doses, and each plan, on the same seeded outbreaks; and how much of the benefit survives when contact tracing misses 10% to 50% of contacts | SIR simulation, Quickselect |
+| How it works | Step through the 2-approximation on the map, one link at a time; a tiny Bloom filter with every bit drawn, and a search for a false positive | 2-approximation, Bloom filter |
 | Benchmarks | Charts of every experiment, plus a quick live run in Java | All |
 
 Field features: people who cannot be vaccinated (infants, pregnancy, refusal) are never chosen and their links are protected through the other person; every dose has a plain-language reason; contact tracing quality warnings; deadlines; the monitoring list; and contact definition settings (minimum duration, recent days only).
@@ -113,6 +114,9 @@ All endpoints are under `/api`. Errors always look like `{ "error": "...", "mess
 | `POST /api/registry/check` | Double-dose guard: `{ "networkId": "...", "personIds": ["P005", "P001"] }` |
 | `POST /api/bloom/config` | Bloom filter tuning: `{ "m": 100000, "k": 7, "n": 10000 }` |
 | `GET /api/bloom/stats?networkId=...` | Size and expected accuracy of the live filters |
+| `POST /api/networks/{id}/simulate/robustness` | Plan from incomplete contacts: `{ "caseIds": [...], "missingShares": [0, 0.1, 0.2, 0.3, 0.4, 0.5] }` |
+| `POST /api/networks/{id}/walkthrough/approx` | Every step of the 2-approximation on the rings (same body as `ring`) |
+| `POST /api/bloom/demo` | A tiny Bloom filter to draw: `{ "m": 32, "k": 3, "keys": ["V001|2026-11-01T16"], "query": "V002|2026-11-01T18" }` |
 | `POST /api/networks/{id}/simulate` | Outbreak simulation: `{ "caseIds": [...], "transmission": 0.08, "recoverySteps": 4, "trials": 200, "efficacy": 1, "seed": 2026 }` |
 | `GET /api/benchmarks`, `POST /api/benchmarks/run` | Saved benchmark tables; a quick live run: `{ "experiment": "dsu", "size": 100000 }` |
 
@@ -142,7 +146,7 @@ Sample networks are in [data/sample](data/sample) (all names are made up). `outb
 - Greedy uses about 19% fewer doses on realistic towns but has no guarantee: 23 against a minimum of 12, and 40 against 18, on the trap samples.
 - Union-find updates a cluster in about 0.02 µs; recomputing clusters with BFS takes 65 ms per update at a million contacts.
 - The Bloom filter's measured false positive rate is within 3% of the formula, with 84 to 88 times less memory than a HashSet. Every hit is confirmed exactly.
-- In the simulation of the sample outbreak, the ring plan cuts average new infections by about 94% against no vaccination, and by about 80% against the same number of random doses.
+- In the simulation of the sample outbreak, the ring plan cuts average new infections by about 94% against no vaccination, and by about 80% against the same number of random doses. If contact tracing misses half of the contacts, the plan made from the rest still cuts infections by about 85%.
 
 Full tables: [docs/benchmarks](docs/benchmarks/README.md).
 
