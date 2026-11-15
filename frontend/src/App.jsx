@@ -13,6 +13,7 @@ import { LoadPage } from './pages/LoadPage.jsx'
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx'
 import { PlanDetailsPage } from './pages/PlanDetailsPage.jsx'
 import { SimulationPage } from './pages/SimulationPage.jsx'
+import { StoryPage } from './pages/StoryPage.jsx'
 import { useWorkspace } from './state/context.js'
 
 function Home() {
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="simulation" element={<SimulationPage />} />
         <Route path="how-it-works" element={<HowItWorksPage />} />
         <Route path="benchmarks" element={<BenchmarksPage />} />
+        <Route path="story" element={<StoryPage />} />
         {TOOLS.filter((t) => !t.ready).map((t) => (
           <Route key={t.path} path={t.path.slice(1)} element={<PlaceholderPage />} />
         ))}
