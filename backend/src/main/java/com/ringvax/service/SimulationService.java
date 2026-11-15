@@ -7,10 +7,13 @@ import java.util.Random;
 
 import org.springframework.stereotype.Service;
 
+import com.ringvax.api.dto.RobustnessRequest;
+import com.ringvax.api.dto.RobustnessResponse;
 import com.ringvax.api.dto.SimulateRequest;
 import com.ringvax.api.dto.SimulateResponse;
 import com.ringvax.engine.cover.ApproxVertexCover;
 import com.ringvax.engine.cover.GreedyVertexCover;
+import com.ringvax.engine.graph.Contact;
 import com.ringvax.engine.graph.ContactGraph;
 import com.ringvax.engine.plan.VaccinationPlan;
 import com.ringvax.engine.plan.VaccinationPlanner;
@@ -88,6 +91,95 @@ public class SimulationService {
         }
         return new SimulateResponse(p, recovery, trials, efficacy, seed, scenarios, headline,
                 (System.nanoTime() - start) / 1e6);
+    }
+
+    /**
+     * Robustness to incomplete contact tracing: for each share s, a seeded random s of
+     * the contacts is hidden from the planner (the hidden sets are nested, so a larger
+     * share hides everything a smaller one hid). The plan is made from what is left, and
+     * the outbreak spreads along every contact. Shows how fast the plan's benefit fades
+     * when tracing misses people.
+     */
+    public RobustnessResponse robustness(String networkId, RobustnessRequest request) {
+        long start = System.nanoTime();
+        ContactGraph g = networks.get(networkId).graph();
+        double p = request.transmission() == null ? 0.08 : request.transmission();
+        int recovery = request.recoverySteps() == null ? 4 : request.recoverySteps();
+        int trials = request.trials() == null ? 100 : request.trials();
+        double efficacy = request.efficacy() == null ? 1.0 : request.efficacy();
+        long seed = request.seed() == null ? PlanService.DEFAULT_SEED : request.seed();
+        List<Double> shares = request.missingShares() == null || request.missingShares().isEmpty()
+                ? List.of(0.0, 0.1, 0.2, 0.3, 0.4, 0.5)
+                : request.missingShares().stream().sorted().toList();
+        long size = (long) g.personCount() + g.contactCount();
+        if (trials * size * (shares.size() + 1) > 4 * MAX_WORK) {
+            throw new IllegalArgumentException("Too much work for a network this size: use at most "
+                    + Math.max(1, 4 * MAX_WORK / (size * (shares.size() + 1))) + " trials");
+        }
+        int depth = request.depth() == null ? RingBuilder.DEFAULT_DEPTH : request.depth();
+        // Fails fast with UNKNOWN_PERSON before any work.
+        int[] cases = new RingBuilder(g).build(request.caseIds(), depth).cases();
+
+        // One seeded order of the contacts; the first share x E of it are hidden.
+        int e = g.contactCount();
+        int[] order = new int[e];
+        for (int i = 0; i < e; i++) {
+            order[i] = i;
+        }
+        Random random = new Random(seed);
+        for (int i = e - 1; i > 0; i--) {
+            int j = random.nextInt(i + 1);
+            int t = order[i];
+            order[i] = order[j];
+            order[j] = t;
+        }
+
+        OutbreakSimulator sim = new OutbreakSimulator(g,
+                new OutbreakSimulator.Settings(p, recovery, efficacy, trials, OutbreakSimulator.MAX_STEPS, seed));
+        boolean[] already = new boolean[g.personCount()];
+        for (int q = 0; q < g.personCount(); q++) {
+            already[q] = g.person(q).vaccinated();
+        }
+        OutbreakSimulator.Result none = sim.run(cases, already);
+
+        List<RobustnessResponse.Row> rows = new ArrayList<>();
+        for (double share : shares) {
+            int hidden = (int) Math.round(share * e);
+            boolean[] isHidden = new boolean[e];
+            for (int i = 0; i < hidden; i++) {
+                isHidden[order[i]] = true;
+            }
+            ContactGraph visible = new ContactGraph();
+            for (int q = 0; q < g.personCount(); q++) {
+                visible.addPerson(g.person(q));
+            }
+            for (int c = 0; c < e; c++) {
+                if (!isHidden[c]) {
+                    Contact link = g.contact(c);
+                    visible.addContact(link.a(), link.b(), link.date(), link.durationMinutes());
+                }
+            }
+            RingResult ring = new RingBuilder(visible).build(request.caseIds(), depth);
+            VaccinationPlan plan = new VaccinationPlanner(seed).plan(visible, ring, new ApproxVertexCover(), null);
+            OutbreakSimulator.Result r = sim.run(cases, with(already, plan.people()));
+            rows.add(new RobustnessResponse.Row(share, hidden, plan.doses(), r.mean(), r.p90(),
+                    none.mean() == 0 ? null : reduction(r.mean(), none.mean())));
+        }
+
+        String headline;
+        if (none.mean() == 0) {
+            headline = "With these settings the outbreak does not spread even without vaccination.";
+        } else {
+            RobustnessResponse.Row full = rows.get(0);
+            RobustnessResponse.Row worst = rows.get(rows.size() - 1);
+            headline = String.format(java.util.Locale.ROOT,
+                    "With %s of contacts traced, the plan cuts infections by %.0f%%. If tracing misses %s of"
+                            + " contacts, it still cuts them by %.0f%%, with %d doses instead of %d.",
+                    WalkthroughService.percent(1 - full.missingShare()), full.reductionVsNone(),
+                    WalkthroughService.percent(worst.missingShare()), worst.reductionVsNone(), worst.doses(),
+                    full.doses());
+        }
+        return new RobustnessResponse(none.mean(), rows, headline, trials, seed, (System.nanoTime() - start) / 1e6);
     }
 
     private static SimulateResponse.Scenario scenario(String name, String label, int doses,
