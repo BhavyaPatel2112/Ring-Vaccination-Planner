@@ -25,6 +25,7 @@ export function Header() {
         <nav aria-label="Main" className="ml-auto flex items-center gap-1">
           <TopLink to="/load">Load data</TopLink>
           <TopLink to="/network">Network</TopLink>
+          <TopLink to="/story">Story</TopLink>
           <button
             type="button"
             onClick={() => setTools(true)}

@@ -5,7 +5,6 @@ import {
   Filter,
   GraduationCap,
   Network,
-  Presentation,
   Scale,
   ShieldCheck,
   Sparkles,
@@ -29,5 +28,4 @@ export const TOOLS = [
   { path: '/simulation', title: 'Outbreak simulation', description: 'Infections under each plan', icon: Waves, ready: true },
   { path: '/how-it-works', title: 'How it works', description: 'Step through the algorithms one decision at a time', icon: GraduationCap, ready: true },
   { path: '/benchmarks', title: 'Benchmarks', description: 'Run times and approximation quality', icon: ChartColumn, ready: true },
-  { path: '/story', title: 'Project story', description: 'What we built, one idea at a time', icon: Presentation, ready: true },
 ]
