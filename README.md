@@ -5,7 +5,7 @@ A planning tool for outbreak response teams. Given a contact network and the con
 Advanced Algorithm, CIA 3 project, ATLAS SkillTech University (2026 to 27).
 Team: Bhavya Patel and Tanushree.
 
-See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full design, [WORK_SPLIT.md](WORK_SPLIT.md) for who built what and [handoff/](handoff/README.md) for the working notes.
+See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full design and [WORK_SPLIT.md](WORK_SPLIT.md) for who built what.
 
 ![Network console with rings and a plan](docs/screenshots/03-network-and-plan.png)
 
@@ -169,7 +169,6 @@ backend/    Spring Boot API and the algorithm engine (all algorithms are written
 frontend/   React app (input, configuration and results only; no algorithm logic)
 data/       Sample CSV networks
 docs/       Benchmark results and screenshots
-handoff/    Working notes between the team members
 ```
 
 ## Limitations
