@@ -3,6 +3,7 @@ import {
   ChartColumn,
   FileUp,
   Filter,
+  GraduationCap,
   Network,
   Scale,
   ShieldCheck,
@@ -25,5 +26,6 @@ export const TOOLS = [
   { path: '/exposure', title: 'Exposure self-check', description: 'Public check of venue visits', icon: Sparkles, ready: true },
   { path: '/bloom', title: 'Bloom filter tuning', description: 'Memory against false positive rate', icon: Filter, ready: true },
   { path: '/simulation', title: 'Outbreak simulation', description: 'Infections under each plan', icon: Waves, ready: true },
+  { path: '/how-it-works', title: 'How it works', description: 'Step through the algorithms one decision at a time', icon: GraduationCap, ready: true },
   { path: '/benchmarks', title: 'Benchmarks', description: 'Run times and approximation quality', icon: ChartColumn, ready: true },
 ]

@@ -8,6 +8,7 @@ import { ComparePage } from './pages/ComparePage.jsx'
 import { ConsolePage } from './pages/ConsolePage.jsx'
 import { ExposurePage } from './pages/ExposurePage.jsx'
 import { FollowUpPage } from './pages/FollowUpPage.jsx'
+import { HowItWorksPage } from './pages/HowItWorksPage.jsx'
 import { LoadPage } from './pages/LoadPage.jsx'
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx'
 import { PlanDetailsPage } from './pages/PlanDetailsPage.jsx'
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="exposure" element={<ExposurePage />} />
         <Route path="bloom" element={<BloomPage />} />
         <Route path="simulation" element={<SimulationPage />} />
+        <Route path="how-it-works" element={<HowItWorksPage />} />
         <Route path="benchmarks" element={<BenchmarksPage />} />
         {TOOLS.filter((t) => !t.ready).map((t) => (
           <Route key={t.path} path={t.path.slice(1)} element={<PlaceholderPage />} />
