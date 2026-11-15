@@ -1,6 +1,6 @@
-import { AnimatePresence, motion } from 'motion/react'
-import { ChevronLeft, ChevronRight, Maximize, Minimize } from 'lucide-react'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { motion, useMotionValueEvent, useScroll, useSpring, useTransform } from 'motion/react'
+import { ChevronDown, Maximize, Minimize } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ArchitectureFlow,
   BfsLayers,
@@ -22,7 +22,9 @@ import {
 import { cn } from '../lib/cn.js'
 
 /*
- * The project told one idea at a time, for the demo. The numbers are the
+ * The project told one idea at a time, for the demo. Scrolling drives it: one stage
+ * stays pinned to the screen and the scroll position cross-fades the ideas on it,
+ * each rising in, holding, and drifting up as the next one arrives. The numbers are the
  * measured ones from docs/benchmarks and the README; nothing here is computed
  * in the browser.
  */
@@ -169,192 +171,193 @@ const SLIDES = [
   },
 ]
 
-const variants = {
-  enter: (dir) => ({ opacity: 0, x: dir * 60, filter: 'blur(8px)' }),
-  centre: { opacity: 1, x: 0, filter: 'blur(0px)' },
-  exit: (dir) => ({ opacity: 0, x: dir * -60, filter: 'blur(8px)' }),
-}
-
 const ease = [0.22, 1, 0.36, 1]
 
+/** Scroll distance given to each idea, in screen heights. */
+const STEP_VH = 120
+const LAST = SLIDES.length - 1
+
+/**
+ * How far slide i is from the centre of the screen, in slides: 0 means it is
+ * fully shown, -1 means it is one idea away below, +1 one idea away above.
+ */
+const offsetOf = (progress, i) => progress * LAST - i
+
 export function StoryPage() {
-  const [[index, dir], setPos] = useState([0, 1])
+  const track = useRef(null)
+  const activeRef = useRef(0)
+  const [active, setActive] = useState(0)
   const [full, setFull] = useState(false)
-  const root = useRef(null)
-  const lastWheel = useRef(0)
-  const touchX = useRef(null)
+  const { scrollYProgress: p } = useScroll({ target: track, offset: ['start start', 'end end'] })
+  const bar = useSpring(p, { stiffness: 200, damping: 30 })
 
-  const go = useCallback((to) => {
-    setPos(([current]) => {
-      const next = Math.max(0, Math.min(SLIDES.length - 1, to(current)))
-      return next === current ? [current, 1] : [next, next > current ? 1 : -1]
-    })
-  }, [])
-  const next = useCallback(() => go((i) => i + 1), [go])
-  const prev = useCallback(() => go((i) => i - 1), [go])
+  useMotionValueEvent(p, 'change', (v) => {
+    const i = Math.round(v * LAST)
+    activeRef.current = i
+    setActive(i)
+  })
 
-  useEffect(() => {
-    function onKey(e) {
-      if (e.target.closest?.('input, textarea, select')) return
-      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) {
-        e.preventDefault()
-        next()
-      } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
-        e.preventDefault()
-        prev()
-      } else if (e.key === 'Home') go(() => 0)
-      else if (e.key === 'End') go(() => SLIDES.length - 1)
-      else if (e.key === 'f' || e.key === 'F') toggleFull()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [next, prev, go])
-
-  useEffect(() => {
-    const onChange = () => setFull(Boolean(document.fullscreenElement))
-    document.addEventListener('fullscreenchange', onChange)
-    return () => document.removeEventListener('fullscreenchange', onChange)
-  }, [])
+  function jump(i) {
+    const el = track.current
+    if (!el) return
+    const target = Math.max(0, Math.min(LAST, i))
+    const top = el.getBoundingClientRect().top + window.scrollY
+    const travel = el.offsetHeight - window.innerHeight
+    window.scrollTo({ top: top + (travel * target) / LAST, behavior: 'smooth' })
+  }
 
   function toggleFull() {
     if (document.fullscreenElement) document.exitFullscreen?.()
-    else root.current?.requestFullscreen?.()
+    else document.documentElement.requestFullscreen?.()
   }
 
-  function onWheel(e) {
-    const now = Date.now()
-    if (Math.abs(e.deltaY) < 30 || now - lastWheel.current < 900) return
-    lastWheel.current = now
-    if (e.deltaY > 0) next()
-    else prev()
-  }
-
-  const slide = SLIDES[index]
+  // Keys still work for the live demo: each press glides to the next idea.
+  useEffect(() => {
+    function onKey(e) {
+      if (e.target.closest?.('input, textarea, select')) return
+      const i = activeRef.current
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) {
+        e.preventDefault()
+        jump(i + 1)
+      } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+        e.preventDefault()
+        jump(i - 1)
+      } else if (e.key === 'Home') jump(0)
+      else if (e.key === 'End') jump(LAST)
+      else if (e.key === 'f' || e.key === 'F') toggleFull()
+    }
+    const onFull = () => setFull(Boolean(document.fullscreenElement))
+    window.addEventListener('keydown', onKey)
+    document.addEventListener('fullscreenchange', onFull)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.removeEventListener('fullscreenchange', onFull)
+    }
+  }, [])
 
   return (
-    <div
-      ref={root}
-      onWheel={onWheel}
-      onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
-      onTouchEnd={(e) => {
-        if (touchX.current === null) return
-        const dx = e.changedTouches[0].clientX - touchX.current
-        touchX.current = null
-        if (dx < -50) next()
-        else if (dx > 50) prev()
-      }}
-      className={cn(
-        'relative mx-auto flex w-full max-w-[1400px] flex-1 flex-col px-6 select-none',
-        full ? 'h-screen max-w-none bg-[var(--scene-bottom)] px-12' : 'h-[calc(100vh-96px)] min-h-[560px]',
-      )}
-    >
-      {/* Progress */}
-      <div className="flex items-center gap-1.5 pt-6" aria-hidden="true">
-        {SLIDES.map((s, i) => (
-          <button
-            key={i}
-            type="button"
-            tabIndex={-1}
-            onClick={() => go(() => i)}
-            title={s.chapter}
-            className="group h-6 flex-1 cursor-pointer"
-          >
-            <span className="block h-1 overflow-hidden rounded-full bg-[var(--glass-border)] transition group-hover:h-1.5">
-              <motion.span
-                className="block h-full rounded-full bg-accent"
-                initial={false}
-                animate={{ width: i <= index ? '100%' : '0%' }}
-                transition={{ duration: 0.45, ease }}
-              />
-            </span>
-          </button>
+    <div ref={track} className="relative w-full" style={{ height: `calc(${LAST * STEP_VH}vh + 100vh)` }}>
+      {/* Reading progress across the top */}
+      <motion.div className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-accent" style={{ scaleX: bar }} aria-hidden="true" />
+
+      {/* The pinned stage: every idea sits here, and scrolling cross-fades them */}
+      <div className="sticky top-0 h-screen overflow-hidden">
+        {SLIDES.map((slide, i) => (
+          <StorySlide key={i} slide={slide} index={i} progress={p} />
         ))}
       </div>
 
-      {/* Slide */}
-      <div className="relative flex flex-1 items-center overflow-hidden">
-        <AnimatePresence mode="wait" custom={dir} initial={false}>
-          <motion.section
-            key={index}
-            custom={dir}
-            variants={variants}
-            initial="enter"
-            animate="centre"
-            exit="exit"
-            transition={{ duration: 0.5, ease }}
-            className="grid w-full items-center gap-10 py-8 lg:grid-cols-[1fr_1.1fr] lg:gap-16"
-            aria-roledescription="slide"
-            aria-label={`${index + 1} of ${SLIDES.length}: ${slide.chapter}`}
-          >
-            <div>
-              <Reveal delay={0.05}>
-                <p className="text-sm font-bold tracking-[0.18em] text-accent uppercase">{slide.chapter}</p>
-              </Reveal>
-              <Reveal delay={0.15}>
-                <h1 className="mt-5 text-[clamp(2rem,4.4vw,3.8rem)] leading-[1.08] font-extrabold tracking-tight text-balance">
-                  {slide.title}
-                </h1>
-              </Reveal>
-              <Reveal delay={0.3}>
-                <p className="mt-6 max-w-xl text-[clamp(1rem,1.5vw,1.25rem)] leading-relaxed text-pretty text-muted">{slide.body}</p>
-              </Reveal>
-            </div>
-            <Reveal delay={0.25} className="h-[clamp(240px,46vh,440px)]">
-              {slide.visual}
-            </Reveal>
-          </motion.section>
-        </AnimatePresence>
-      </div>
+      {/* Chapter dots on the right */}
+      <nav aria-label="Chapters" className="fixed top-1/2 right-5 z-40 hidden -translate-y-1/2 flex-col gap-2.5 lg:flex">
+        {SLIDES.map((s, i) => (
+          <button key={i} type="button" onClick={() => jump(i)} title={s.chapter} aria-label={s.chapter} className="group grid size-4 place-items-center">
+            <span
+              className={cn(
+                'block rounded-full transition-all duration-300',
+                i === active ? 'size-2.5 bg-accent' : 'size-1.5 bg-[var(--text-faint)] opacity-50 group-hover:opacity-100',
+              )}
+            />
+          </button>
+        ))}
+      </nav>
 
-      {/* Controls */}
-      <div className="flex items-center justify-between pb-6">
-        <span className="text-sm font-semibold text-faint tabular-nums">
-          {String(index + 1).padStart(2, '0')} / {SLIDES.length}
+      {/* Corner controls */}
+      <div className="fixed right-5 bottom-5 z-40 flex items-center gap-3">
+        <span className="glass rounded-full px-3 py-1.5 text-xs font-semibold text-muted tabular-nums">
+          {String(active + 1).padStart(2, '0')} / {SLIDES.length}
         </span>
-        <span className="hidden text-xs text-faint md:block">Arrow keys or scroll to move · F for full screen</span>
-        <div className="flex items-center gap-2">
-          <RoundButton label={full ? 'Exit full screen' : 'Full screen'} onClick={toggleFull}>
-            {full ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
-          </RoundButton>
-          <RoundButton label="Previous" onClick={prev} disabled={index === 0}>
-            <ChevronLeft className="size-5" />
-          </RoundButton>
-          <RoundButton label="Next" onClick={next} disabled={index === SLIDES.length - 1} primary>
-            <ChevronRight className="size-5" />
-          </RoundButton>
-        </div>
+        <button
+          type="button"
+          onClick={toggleFull}
+          aria-label={full ? 'Exit full screen' : 'Full screen'}
+          title={full ? 'Exit full screen (F)' : 'Full screen (F)'}
+          className="glass grid size-10 place-items-center rounded-full text-muted transition hover:text-text"
+        >
+          {full ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
+        </button>
       </div>
     </div>
   )
 }
 
-function Reveal({ children, delay = 0, className }) {
+/** Opacity for a slide `d` slides away from centre: fades over 0.12–0.52, so neighbours just touch. */
+function fade(d, first, last) {
+  if ((first && d < 0) || (last && d > 0)) return 1
+  const a = Math.abs(d)
+  if (a <= 0.12) return 1
+  if (a >= 0.52) return 0
+  return 1 - (a - 0.12) / 0.4
+}
+
+/**
+ * One idea on the stage. Below centre it waits low and blurred; at centre it
+ * is sharp and still; above centre it drifts up and blurs out.
+ */
+function StorySlide({ slide, index, progress }) {
+  const first = index === 0
+  const last = index === LAST
+  const d = useTransform(progress, (v) => offsetOf(v, index))
+  const opacity = useTransform(d, (x) => fade(x, first, last))
+  const clampD = (x) => Math.max(-1, Math.min(1, (first && x < 0) || (last && x > 0) ? 0 : x))
+  const textY = useTransform(d, (x) => -clampD(x) * 120)
+  const visualY = useTransform(d, (x) => -clampD(x) * (x < 0 ? 200 : 60))
+  const visualScale = useTransform(d, (x) => 1 + clampD(x) * (x < 0 ? 0.14 : 0.06))
+  const filter = useTransform(d, (x) => `blur(${Math.min(14, Math.max(0, Math.abs(clampD(x)) - 0.12) * 24)}px)`)
+
+  // The drawing starts again each time its idea comes back to the centre.
+  const [shown, setShown] = useState(first)
+  const [run, setRun] = useState(0)
+  useMotionValueEvent(d, 'change', (x) => {
+    const visible = Math.abs(clampD(x)) < 0.45
+    if (visible && !shown) setRun((r) => r + 1)
+    if (visible !== shown) setShown(visible)
+  })
+
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay, ease }}
+    <motion.section
+      style={{ opacity }}
+      className={cn('absolute inset-0 flex items-center', !shown && 'pointer-events-none')}
+      aria-hidden={!shown}
+      aria-label={`${index + 1} of ${SLIDES.length}: ${slide.chapter}`}
     >
-      {children}
-    </motion.div>
+      <div className="mx-auto grid w-full max-w-[1400px] items-center gap-10 px-8 lg:grid-cols-[1fr_1.1fr] lg:gap-20 lg:px-16">
+        <motion.div style={{ y: textY, filter }}>
+          <p className="text-sm font-bold tracking-[0.18em] text-accent uppercase">{slide.chapter}</p>
+          <h2
+            className={cn(
+              'mt-5 font-extrabold tracking-tight text-balance',
+              first ? 'text-[clamp(2.6rem,5.6vw,5rem)]/[1.05]' : 'text-[clamp(2rem,4.4vw,3.9rem)]/[1.08]',
+            )}
+          >
+            {slide.title}
+          </h2>
+          <p className="mt-6 max-w-xl text-[clamp(1rem,1.5vw,1.25rem)] leading-relaxed text-pretty text-muted">{slide.body}</p>
+          {first && <ScrollHint />}
+        </motion.div>
+        <motion.div style={{ y: visualY, scale: visualScale }} className="h-[clamp(240px,48vh,460px)]">
+          {shown && (
+            <div key={run} className="h-full">
+              {slide.visual}
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </motion.section>
   )
 }
 
-function RoundButton({ label, onClick, disabled, primary, children }) {
+function ScrollHint() {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      disabled={disabled}
-      className={cn(
-        'grid size-11 place-items-center rounded-full transition disabled:opacity-30',
-        primary ? 'bg-accent text-white shadow-[0_6px_18px_-8px_var(--accent)] hover:brightness-110' : 'glass text-muted hover:text-text',
-      )}
+    <motion.div
+      className="mt-12 flex items-center gap-2 text-sm font-semibold text-faint"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1.2, duration: 0.8, ease }}
     >
-      {children}
-    </button>
+      <motion.span animate={{ y: [0, 6, 0] }} transition={{ duration: 1.6, repeat: Infinity }}>
+        <ChevronDown className="size-5" />
+      </motion.span>
+      Scroll to explore
+    </motion.div>
   )
 }
