@@ -6,10 +6,10 @@ import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState }
 import { IconButton } from '../ui/Button.jsx'
 import { buildNetworkStyle, seededPosition } from './networkStyle.js'
 import { describePerson } from './personStatus.js'
+import { linkKey } from '../../lib/linkKey.js'
 
 cytoscape.use(fcose)
 
-const linkKey = (a, b) => (a < b ? `${a}~${b}` : `${b}~${a}`)
 
 /**
  * The contact network, drawn with Cytoscape. It only displays results from the
@@ -17,10 +17,12 @@ const linkKey = (a, b) => (a < b ? `${a}~${b}` : `${b}~${a}`)
  *
  * The ref exposes `pointOf(personId)` (screen position of a person, for the
  * callout lines) and `fit()`. An optional `highlight` set of person ids dims
- * everyone else (used to show one outbreak cluster).
+ * everyone else (used to show one outbreak cluster). `focus` ({ a, b, kind }) draws
+ * one link and its people boldly, and `covered` (a set of link keys) marks links
+ * already protected; both are used by the step-by-step walkthrough.
  */
 export const NetworkCanvas = forwardRef(function NetworkCanvas(
-  { view, ring, plan, cases, selected, hovered, onSelect, onHover, expanded, onToggleExpand, highlight },
+  { view, ring, plan, cases, selected, hovered, onSelect, onHover, expanded, onToggleExpand, highlight, focus, covered },
   ref,
 ) {
   const container = useRef(null)
@@ -137,6 +139,7 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
         if (planned.has(node.id)) list.push('planned')
         if (node.id === selected) list.push('selected')
         if (node.id === hovered) list.push('hovered')
+        if (focus && (node.id === focus.a || node.id === focus.b)) list.push('focus')
         element.classes(list)
       }
       cy.edges().forEach((edge) => {
@@ -149,10 +152,12 @@ export const NetworkCanvas = forwardRef(function NetworkCanvas(
         else if (caseSet.has(a) || caseSet.has(b)) list.push('caselink')
         else if (ring && !(level.has(a) && level.has(b))) list.push('dim')
         if (highlight && !(highlight.has(a) && highlight.has(b))) list.push('dim')
+        if (covered?.has(key)) list.push('covered')
+        if (focus && key === linkKey(focus.a, focus.b)) list.push(focus.kind === 'MATCHED' ? 'focus' : 'focusskip')
         edge.classes(list)
       })
     })
-  }, [classes, view, ring, selected, hovered, highlight])
+  }, [classes, view, ring, selected, hovered, highlight, focus, covered])
 
   // Hover card position follows the node.
   useEffect(() => {
