@@ -55,6 +55,44 @@ class SimulationApiTest {
     }
 
     @Test
+    void contactDefinitionAndDurationWeightingAreApplied() throws Exception {
+        String id = generate();
+        String all = postJson("/api/networks/" + id + "/simulate",
+                "{\"caseIds\": [\"P0001\"], \"trials\": 20}")
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String filtered = postJson("/api/networks/" + id + "/simulate",
+                "{\"caseIds\": [\"P0001\"], \"trials\": 20, \"minDurationMinutes\": 60, \"durationWeighted\": true}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scenarios", hasSize(4)))
+                .andReturn().getResponse().getContentAsString();
+        int allDoses = JsonPath.read(all, "$.scenarios[2].doses");
+        int filteredDoses = JsonPath.read(filtered, "$.scenarios[2].doses");
+        org.junit.jupiter.api.Assertions.assertTrue(filteredDoses < allDoses,
+                "counting only contacts of 60+ minutes plans fewer doses: " + filteredDoses + " vs " + allDoses);
+
+        postJson("/api/networks/" + id + "/simulate", "{\"caseIds\": [\"P0001\"], \"minDurationMinutes\": -1}")
+                .andExpect(status().isBadRequest());
+        postJson("/api/networks/" + id + "/simulate/robustness",
+                "{\"caseIds\": [\"P0001\"], \"trials\": 10, \"minDurationMinutes\": 15, \"durationWeighted\": true}")
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void ringPlanBeatsRandomDosesOnTheRealHighSchoolNetwork() throws Exception {
+        String body = postJson("/api/networks/samples/sociopatterns-high-school", "")
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String id = JsonPath.read(body, "$.networkId");
+        String result = postJson("/api/networks/" + id + "/simulate",
+                "{\"caseIds\": [\"S061\", \"S164\"], \"minDurationMinutes\": 15, \"durationWeighted\": true}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.scenarios[2].reductionVsNone", greaterThan(50.0)))
+                .andReturn().getResponse().getContentAsString();
+        double random = ((Number) JsonPath.read(result, "$.scenarios[1].mean")).doubleValue();
+        double plan = ((Number) JsonPath.read(result, "$.scenarios[2].mean")).doubleValue();
+        org.junit.jupiter.api.Assertions.assertTrue(plan < random / 2, "plan " + plan + " vs random " + random);
+    }
+
+    @Test
     void sameSeedGivesTheSameNumbers() throws Exception {
         String id = generate();
         String request = "{\"caseIds\": [\"P0001\"], \"trials\": 30, \"seed\": 5}";

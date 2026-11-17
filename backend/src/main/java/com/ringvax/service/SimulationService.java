@@ -13,6 +13,7 @@ import com.ringvax.api.dto.SimulateRequest;
 import com.ringvax.api.dto.SimulateResponse;
 import com.ringvax.engine.cover.ApproxVertexCover;
 import com.ringvax.engine.cover.GreedyVertexCover;
+import com.ringvax.engine.followup.ContactDefinition;
 import com.ringvax.engine.graph.Contact;
 import com.ringvax.engine.graph.ContactGraph;
 import com.ringvax.engine.plan.VaccinationPlan;
@@ -53,15 +54,15 @@ public class SimulationService {
                     + Math.max(1, MAX_WORK / size) + " trials");
         }
 
-        RingResult ring = new RingBuilder(g).build(request.caseIds(),
-                request.depth() == null ? RingBuilder.DEFAULT_DEPTH : request.depth());
+        StoredNetwork network = networks.get(networkId);
+        ContactDefinition def = ContactSettings.resolve(network, request.minDurationMinutes(), request.windowDays());
+        RingResult ring = PlanService.buildRing(g, request.caseIds(), request.depth(), def);
         int[] cases = ring.cases();
         VaccinationPlanner planner = new VaccinationPlanner(seed);
         VaccinationPlan approx = planner.plan(g, ring, new ApproxVertexCover(), request.budget());
         VaccinationPlan greedy = new VaccinationPlanner(seed).plan(g, ring, new GreedyVertexCover(), request.budget());
 
-        OutbreakSimulator sim = new OutbreakSimulator(g,
-                new OutbreakSimulator.Settings(p, recovery, efficacy, trials, OutbreakSimulator.MAX_STEPS, seed));
+        OutbreakSimulator sim = simulator(g, p, recovery, efficacy, trials, seed, request.durationWeighted());
         boolean[] already = new boolean[g.personCount()];
         for (int q = 0; q < g.personCount(); q++) {
             already[q] = g.person(q).vaccinated();
@@ -117,6 +118,8 @@ public class SimulationService {
                     + Math.max(1, 4 * MAX_WORK / (size * (shares.size() + 1))) + " trials");
         }
         int depth = request.depth() == null ? RingBuilder.DEFAULT_DEPTH : request.depth();
+        ContactDefinition def = ContactSettings.resolve(networks.get(networkId), request.minDurationMinutes(),
+                request.windowDays());
         // Fails fast with UNKNOWN_PERSON before any work.
         int[] cases = new RingBuilder(g).build(request.caseIds(), depth).cases();
 
@@ -134,8 +137,7 @@ public class SimulationService {
             order[j] = t;
         }
 
-        OutbreakSimulator sim = new OutbreakSimulator(g,
-                new OutbreakSimulator.Settings(p, recovery, efficacy, trials, OutbreakSimulator.MAX_STEPS, seed));
+        OutbreakSimulator sim = simulator(g, p, recovery, efficacy, trials, seed, request.durationWeighted());
         boolean[] already = new boolean[g.personCount()];
         for (int q = 0; q < g.personCount(); q++) {
             already[q] = g.person(q).vaccinated();
@@ -159,7 +161,7 @@ public class SimulationService {
                     visible.addContact(link.a(), link.b(), link.date(), link.durationMinutes());
                 }
             }
-            RingResult ring = new RingBuilder(visible).build(request.caseIds(), depth);
+            RingResult ring = PlanService.buildRing(visible, request.caseIds(), depth, def);
             VaccinationPlan plan = new VaccinationPlanner(seed).plan(visible, ring, new ApproxVertexCover(), null);
             OutbreakSimulator.Result r = sim.run(cases, with(already, plan.people()));
             rows.add(new RobustnessResponse.Row(share, hidden, plan.doses(), r.mean(), r.p90(),
@@ -172,14 +174,31 @@ public class SimulationService {
         } else {
             RobustnessResponse.Row full = rows.get(0);
             RobustnessResponse.Row worst = rows.get(rows.size() - 1);
+            // "Still" only when at least half of the benefit survives; otherwise say plainly that it falls.
+            boolean holds = worst.reductionVsNone() >= full.reductionVsNone() / 2;
             headline = String.format(java.util.Locale.ROOT,
                     "With %s of contacts traced, the plan cuts infections by %.0f%%. If tracing misses %s of"
-                            + " contacts, it still cuts them by %.0f%%, with %d doses instead of %d.",
+                            + " contacts, %s %.0f%%, with %d doses instead of %d.",
                     WalkthroughService.percent(1 - full.missingShare()), full.reductionVsNone(),
-                    WalkthroughService.percent(worst.missingShare()), worst.reductionVsNone(), worst.doses(),
+                    WalkthroughService.percent(worst.missingShare()),
+                    holds ? "it still cuts them by" : "the cut falls to", worst.reductionVsNone(), worst.doses(),
                     full.doses());
         }
         return new RobustnessResponse(none.mean(), rows, headline, trials, seed, (System.nanoTime() - start) / 1e6);
+    }
+
+    /**
+     * The simulator for these settings. With durationWeighted, p is the chance of infection
+     * per 15 minutes of contact and each contact's risk grows with its duration; otherwise
+     * every contact carries p.
+     */
+    private static OutbreakSimulator simulator(ContactGraph g, double p, int recovery, double efficacy, int trials,
+                                               long seed, Boolean durationWeighted) {
+        OutbreakSimulator.Settings settings =
+                new OutbreakSimulator.Settings(p, recovery, efficacy, trials, OutbreakSimulator.MAX_STEPS, seed);
+        return Boolean.TRUE.equals(durationWeighted)
+                ? new OutbreakSimulator(g, settings, OutbreakSimulator.durationWeighted(g, p))
+                : new OutbreakSimulator(g, settings);
     }
 
     private static SimulateResponse.Scenario scenario(String name, String label, int doses,
