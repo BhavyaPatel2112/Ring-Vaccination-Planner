@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import * as api from '../api/endpoints.js'
 import { WorkspaceContext } from './context.js'
+import { isSensorData } from '../lib/sensorData.js'
 
 /**
  * Shared state for the current outbreak: the loaded network, the confirmed
@@ -24,6 +25,15 @@ function recall() {
   } catch {
     return null
   }
+}
+
+/**
+ * Contact definition a network starts with. Sensor data records every 20-second
+ * encounter, so real SocioPatterns networks start with the usual close-contact
+ * rule (15 minutes or more); every other network counts every contact.
+ */
+function defaultContactSettings(summary) {
+  return isSensorData(summary) ? { minDurationMinutes: 15 } : {}
 }
 
 export function WorkspaceProvider({ children }) {
@@ -51,6 +61,7 @@ export function WorkspaceProvider({ children }) {
   const open = useCallback(async (summary) => {
     const networkView = await api.getNetworkView(summary.networkId)
     setNetwork(summary)
+    setContactSettingsValue(defaultContactSettings(summary))
     setView(networkView)
     setCases(summary.caseIds)
     setRing(null)

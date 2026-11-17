@@ -11,6 +11,7 @@ import { GlassPanel, PanelTitle } from '../components/ui/GlassPanel.jsx'
 import { Notice } from '../components/ui/Notice.jsx'
 import { Slider } from '../components/ui/Slider.jsx'
 import { chartOptions, useChartColors } from '../lib/chartTheme.js'
+import { isSensorData } from '../lib/sensorData.js'
 import { useWorkspace } from '../state/context.js'
 
 ChartJS.register(BarElement, LineElement, PointElement, CategoryScale, LinearScale, Filler, Tooltip, Legend)
@@ -19,7 +20,7 @@ const TONES = { NONE: 'case', RANDOM: 'warning', APPROX: 'planned', GREEDY: 'acc
 
 /** Seeded outbreak simulation: infections with no vaccination, random doses and each ring plan. */
 export function SimulationPage() {
-  const { network, cases, depth, restoring } = useWorkspace()
+  const { network, cases, depth, contactSettings, restoring } = useWorkspace()
   const colors = useChartColors()
   const [transmission, setTransmission] = useState(0.08)
   const [recovery, setRecovery] = useState(4)
@@ -30,6 +31,8 @@ export function SimulationPage() {
   const [loading, setLoading] = useState(false)
   const [robust, setRobust] = useState(null)
   const [robustLoading, setRobustLoading] = useState(false)
+  // Risk that grows with contact time: on by default for sensor data, where most contacts last seconds.
+  const [weightedChoice, setWeighted] = useState(null)
 
   if (restoring) return null
   if (!network) return <Navigate to="/load" replace />
@@ -40,6 +43,10 @@ export function SimulationPage() {
       </Page>
     )
   }
+
+  const weighted = weightedChoice ?? isSensorData(network)
+  const minMinutes = contactSettings.minDurationMinutes
+  const windowDays = contactSettings.windowDays
 
   const run = async () => {
     setLoading(true)
@@ -53,6 +60,8 @@ export function SimulationPage() {
           trials,
           efficacy,
           seed: seed === '' ? undefined : Number(seed),
+          ...contactSettings,
+          durationWeighted: weighted,
         }),
       )
     } catch (e) {
@@ -69,6 +78,8 @@ export function SimulationPage() {
     recoverySteps: recovery,
     efficacy,
     seed: seed === '' ? undefined : Number(seed),
+    ...contactSettings,
+    durationWeighted: weighted,
   }
 
   const runRobustness = async () => {
@@ -91,10 +102,21 @@ export function SimulationPage() {
         <GlassPanel className="h-fit">
           <PanelTitle icon={Settings2} title="Outbreak settings" subtitle="A simple SIR model on the contact network" />
           <div className="flex flex-col gap-4">
-            <Slider label="Chance to infect a contact per day" value={transmission} onChange={setTransmission} min={0.01} max={0.5} step={0.01} format={(v) => `${Math.round(v * 100)}%`} />
+            <label className="flex items-start gap-2 text-sm font-semibold">
+              <input type="checkbox" className="mt-0.5 size-4 accent-[var(--accent)]" checked={weighted} onChange={(e) => setWeighted(e.target.checked)} />
+              <span>
+                Risk grows with time spent together
+                <span className="block text-xs font-normal text-muted">A 1-minute contact is far less risky than a day in the same class.</span>
+              </span>
+            </label>
+            <Slider label={weighted ? 'Chance to infect per 15 minutes together' : 'Chance to infect a contact per day'} value={transmission} onChange={setTransmission} min={0.01} max={0.5} step={0.01} format={(v) => `${Math.round(v * 100)}%`} />
             <Slider label="Days infectious" value={recovery} onChange={setRecovery} min={1} max={14} />
             <Slider label="Simulated outbreaks" value={trials} onChange={setTrials} min={20} max={1000} step={20} />
             <Slider label="Vaccine protection" value={efficacy} onChange={setEfficacy} min={0.5} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} />
+            <p className="text-xs text-muted">
+              The plan counts {minMinutes != null ? `contacts of ${minMinutes} minutes or more` : 'every contact'}
+              {windowDays != null ? ` from the last ${windowDays} days` : ''}. Change this on Deadlines and monitoring.
+            </p>
             <Field label="Seed" type="number" value={seed} onChange={(e) => setSeed(e.target.value)} hint="The same seed always gives the same numbers." />
             <Button variant="primary" icon={Play} loading={loading} onClick={run}>
               Run simulation
