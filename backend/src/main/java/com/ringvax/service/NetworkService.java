@@ -69,7 +69,7 @@ public class NetworkService {
         SAMPLE_LABELS.put("greedy-worst-case-18", new String[] {"Greedy trap (58 people)",
             "A larger trap: around case P011 greedy needs 40 doses where 32 are enough"});
         SAMPLE_LABELS.put("sociopatterns-high-school", new String[] {"Real high school (SocioPatterns)",
-            "Face-to-face contacts of about 330 students recorded with wearable sensors (convert it first)"});
+            "Real contacts: 327 students in a Marseille high school, recorded by wearable sensors over 5 days in 2013; 2 hypothetical cases"});
     }
 
     private final Map<String, StoredNetwork> networks = new ConcurrentHashMap<>();
