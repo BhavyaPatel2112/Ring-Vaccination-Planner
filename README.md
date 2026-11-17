@@ -41,7 +41,7 @@ Every assessed algorithm has Javadoc with its purpose and time and space complex
 | Deadlines and monitoring | Vaccinate-by deadline per dose (72 hours after exposure), people to watch for 21 days, contact definition settings | Indexed heap |
 | Exposure self-check | Public, phone-friendly: "possibly exposed" from the filter, then the confirmed answer; never names a case | Bloom filter plus exact check |
 | Bloom filter tuning | Sliders for m and k; measured against theoretical false positive rate, memory against a HashSet | Bloom filter |
-| Outbreak simulation | Infections with no vaccination, random doses, and each plan, on the same seeded outbreaks; and how much of the benefit survives when contact tracing misses 10% to 50% of contacts | SIR simulation, Quickselect |
+| Outbreak simulation | Infections with no vaccination, random doses, and each plan, on the same seeded outbreaks; optional infection risk that grows with contact time; and how much of the benefit survives when contact tracing misses 10% to 50% of contacts | SIR simulation, Quickselect |
 | How it works | Step through the 2-approximation on the map, one link at a time; a tiny Bloom filter with every bit drawn, and a search for a false positive | 2-approximation, Bloom filter |
 | Benchmarks | Charts of every experiment, plus a quick live run in Java | All |
 
@@ -76,7 +76,7 @@ Open http://localhost:5173 and choose a sample. The frontend forwards every `/ap
 Tests, lint and build:
 
 ```bash
-cd backend && ./mvnw test        # over 240 tests, all passing
+cd backend && ./mvnw test        # over 260 tests, all passing
 cd frontend && npx oxlint        # prints nothing when clean
 cd frontend && npm run build
 ```
@@ -117,7 +117,7 @@ All endpoints are under `/api`. Errors always look like `{ "error": "...", "mess
 | `POST /api/networks/{id}/simulate/robustness` | Plan from incomplete contacts: `{ "caseIds": [...], "missingShares": [0, 0.1, 0.2, 0.3, 0.4, 0.5] }` |
 | `POST /api/networks/{id}/walkthrough/approx` | Every step of the 2-approximation on the rings (same body as `ring`) |
 | `POST /api/bloom/demo` | A tiny Bloom filter to draw: `{ "m": 32, "k": 3, "keys": ["V001|2026-11-01T16"], "query": "V002|2026-11-01T18" }` |
-| `POST /api/networks/{id}/simulate` | Outbreak simulation: `{ "caseIds": [...], "transmission": 0.08, "recoverySteps": 4, "trials": 200, "efficacy": 1, "seed": 2026 }` |
+| `POST /api/networks/{id}/simulate` | Outbreak simulation: `{ "caseIds": [...], "transmission": 0.08, "recoverySteps": 4, "trials": 200, "efficacy": 1, "seed": 2026 }`, plus optional `minDurationMinutes`, `windowDays` (which contacts the plan counts) and `"durationWeighted": true` (transmission per 15 minutes of contact) |
 | `GET /api/benchmarks`, `POST /api/benchmarks/run` | Saved benchmark tables; a quick live run: `{ "experiment": "dsu", "size": 100000 }` |
 
 Examples:
@@ -138,7 +138,7 @@ curl -s -X POST localhost:8090/api/networks/$NET/simulate -H 'Content-Type: appl
 | `checkins.csv` | `person_id,venue_id,start_time,end_time` |
 | `cases.csv` | `person_id,confirmed_date` |
 
-Sample networks are in [data/sample](data/sample) (all names are made up). `outbreak-small` is the main demo; `validation-demo` has one example of every input problem; `star`, `complete-bipartite-3-3` and the two greedy traps are worst cases for the algorithms.
+Sample networks are in [data/sample](data/sample). `outbreak-small` is the main demo (all names made up); `validation-demo` has one example of every input problem; `star`, `complete-bipartite-3-3` and the two greedy traps are worst cases for the algorithms. `sociopatterns-high-school` is **real contact data**: 327 students of a Marseille high school whose face-to-face contacts were recorded by wearable sensors over 5 days in 2013 ([SocioPatterns](data/sociopatterns/README.md), CC BY-NC-SA, Mastrandrea et al., PLoS ONE 2015). Its two cases are hypothetical, because the data records contacts, not infections.
 
 ## Results in brief
 
@@ -149,6 +149,24 @@ Sample networks are in [data/sample](data/sample) (all names are made up). `outb
 - In the simulation of the sample outbreak, the ring plan cuts average new infections by about 94% against no vaccination, and by about 80% against the same number of random doses. If contact tracing misses half of the contacts, the plan made from the rest still cuts infections by about 85%.
 
 Full tables: [docs/benchmarks](docs/benchmarks/README.md).
+
+### On real contact data
+
+On the SocioPatterns high school network (327 students, 5,818 pairs who met, two hypothetical cases), with the usual close-contact rule of 15 minutes or more and infection risk that grows with time spent together:
+
+| | Doses | Average new infections | Against no vaccination |
+|---|---|---|---|
+| No vaccination | 0 | 306 | |
+| 30 random students | 30 | 271 | 11% fewer |
+| Ring plan, 2-approximation | 30 | 103 (median 0) | **66% fewer** |
+| Ring plan, greedy | 19 | 170 | 45% fewer |
+
+- The plan vaccinates 9% of the school and does 62% better than the same number of random doses. In most simulated outbreaks (the median) it stops the spread completely.
+- The exact solver proves the minimum for these rings is 19, so the approximation's 30 doses are 1.58 times the minimum, inside its guarantee. Greedy found the minimum here, but its smaller plan protected less: the fewest doses is not always the most protective plan.
+- **Counting every sensor contact** (even 20 seconds in a corridor) the plan would need 315 of 327 students, and with every contact equally risky no plan beats random doses. Real contact data needs a contact definition and duration-based risk.
+- **Missing contacts hurt more on real data.** With 10% of contacts missing the plan still cuts infections by 68%, but at 20 to 30% missing the cut falls to 30%, and at 40% to 2%: around these cases ring 1 is only 4 students, so losing a few long contacts loses the ring.
+
+![Simulation on the real high school network](docs/screenshots/14-real-data-simulation.png)
 
 ## Screenshots
 
@@ -174,6 +192,7 @@ docs/       Benchmark results and screenshots
 ## Limitations
 
 - Networks are kept in memory; restarting the backend clears them.
-- The simulation is a simple SIR model with one transmission probability for every contact. It compares strategies; it does not forecast a real outbreak.
+- The simulation is a simple SIR model: one transmission probability for every contact, or one per 15 minutes of contact when risk is weighted by duration. It compares strategies; it does not forecast a real outbreak.
+- The real network has real contacts but hypothetical cases: no public dataset pairs everyone's contacts with real infections.
 - Vaccination is treated as fully protective in the plan (the simulation can lower the efficacy).
 - Contact dates are days, so deadlines assume the exposure happened at the start of the day (the earliest, safest deadline).
