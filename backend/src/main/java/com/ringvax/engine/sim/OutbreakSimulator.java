@@ -77,12 +77,62 @@ public class OutbreakSimulator {
                          long runtimeNanos) {
     }
 
+    /** Minutes of contact that one "unit" of exposure stands for in {@link #durationWeighted}. */
+    public static final double MINUTES_PER_EXPOSURE = 15.0;
+
     private final ContactGraph graph;
     private final Settings settings;
+    private final double[] contactProbability;
 
+    /** Every contact carries the same transmission probability, from the settings. */
     public OutbreakSimulator(ContactGraph graph, Settings settings) {
+        this(graph, settings, null);
+    }
+
+    /**
+     * Each contact c carries its own transmission probability {@code contactProbability[c]}
+     * (indexed like {@link ContactGraph#contact(int)}); null means "use the settings' probability
+     * for every contact". The settings' probability is then not used.
+     */
+    public OutbreakSimulator(ContactGraph graph, Settings settings, double[] contactProbability) {
+        if (contactProbability != null) {
+            if (contactProbability.length != graph.contactCount()) {
+                throw new IllegalArgumentException("contactProbability must have one entry per contact");
+            }
+            for (double q : contactProbability) {
+                if (!(q >= 0 && q <= 1)) {
+                    throw new IllegalArgumentException("Contact probabilities must be between 0 and 1");
+                }
+            }
+        }
         this.graph = graph;
         this.settings = settings;
+        this.contactProbability = contactProbability;
+    }
+
+    /**
+     * Transmission probabilities that grow with how long two people were together.
+     * With p the chance of infection per 15 minutes of contact, a contact of d minutes has
+     *
+     * <pre>
+     * q = 1 - (1 - p)^(d / 15)
+     * </pre>
+     *
+     * the chance that at least one of d/15 independent 15-minute exposures transmits. A
+     * 1-minute contact gets about p/15, a 15-minute one exactly p, and a full day close
+     * to 1. A contact of unknown duration counts as 15 minutes. O(E) time and space.
+     */
+    public static double[] durationWeighted(ContactGraph graph, double pPer15Minutes) {
+        if (!(pPer15Minutes >= 0 && pPer15Minutes <= 1)) {
+            throw new IllegalArgumentException("The transmission probability must be between 0 and 1");
+        }
+        double[] q = new double[graph.contactCount()];
+        for (int c = 0; c < q.length; c++) {
+            int minutes = graph.contact(c).durationMinutes();
+            double units = minutes > 0 ? minutes / MINUTES_PER_EXPOSURE : 1.0;
+            q[c] = 1 - Math.pow(1 - pPer15Minutes, units);
+        }
+        return q;
     }
 
     /**
@@ -140,8 +190,10 @@ public class OutbreakSimulator {
                     int u = current[i];
                     for (int j = 0; j < graph.degree(u); j++) {
                         int v = graph.neighbour(u, j);
-                        if (state[v] == SUSCEPTIBLE && !immune[v]
-                                && spread.nextDouble() < settings.transmissionProbability()) {
+                        double q = contactProbability == null
+                                ? settings.transmissionProbability()
+                                : contactProbability[graph.contactAt(u, j)];
+                        if (state[v] == SUSCEPTIBLE && !immune[v] && spread.nextDouble() < q) {
                             state[v] = INFECTED;
                             infectedAt[v] = step + 1;
                             born[newly++] = v;

@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Size;
 /**
  * "What if contact tracing missed some contacts?": the planner sees only part of the
  * contacts, the outbreak spreads along all of them. Default shares: 0, 10, ..., 50%.
+ * minDurationMinutes, windowDays and durationWeighted work as for /simulate.
  */
 public record RobustnessRequest(
         @NotEmpty(message = "at least one confirmed case is required") List<@NotBlank String> caseIds,
@@ -28,5 +29,8 @@ public record RobustnessRequest(
         @Size(max = 10, message = "at most 10 missing shares") List<
                 @DecimalMin(value = "0.0", message = "missing shares must be between 0 and 0.9")
                 @DecimalMax(value = "0.9", message = "missing shares must be between 0 and 0.9") Double> missingShares,
+        @Min(value = 0, message = "minDurationMinutes must be 0 or more") Integer minDurationMinutes,
+        @Min(value = 1, message = "windowDays must be 1 or more") Integer windowDays,
+        Boolean durationWeighted,
         Long seed) {
 }

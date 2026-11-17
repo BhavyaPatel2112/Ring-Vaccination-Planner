@@ -51,6 +51,7 @@ class SampleDataTest {
             "complete-bipartite-3-3, 6, 9",
             "greedy-worst-case-12, 35, 115",
             "greedy-worst-case-18, 58, 259",
+            "sociopatterns-high-school, 327, 5818",
     })
     void cleanSamplesParseWithoutWarnings(String folder, int people, int contacts) {
         ParseResult<ContactGraph> result = network(folder);

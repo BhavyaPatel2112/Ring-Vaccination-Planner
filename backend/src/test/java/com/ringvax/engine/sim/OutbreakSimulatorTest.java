@@ -133,4 +133,60 @@ class OutbreakSimulatorTest {
         OutbreakSimulator sim = new OutbreakSimulator(g, settings(0.1, 3, 1, 1, 1));
         assertThrows(IllegalArgumentException.class, () -> sim.run(new int[] {7}, new boolean[3]));
     }
+
+    // ------------------------------------------------------------------ per-contact probabilities
+
+    @Test
+    void sameProbabilityOnEveryContactMatchesTheSettings() {
+        ContactGraph g = SyntheticNetworkGenerator.generate(500, 6, 3);
+        boolean[] none = new boolean[g.personCount()];
+        double[] uniform = new double[g.contactCount()];
+        Arrays.fill(uniform, 0.1);
+
+        OutbreakSimulator.Result plain = new OutbreakSimulator(g, settings(0.1, 4, 1, 50, 2026)).run(new int[] {0}, none);
+        OutbreakSimulator.Result perContact =
+                new OutbreakSimulator(g, settings(0.1, 4, 1, 50, 2026), uniform).run(new int[] {0}, none);
+
+        assertArrayEquals(plain.newInfections(), perContact.newInfections(), "same draws, same outbreaks");
+    }
+
+    @Test
+    void zeroProbabilityContactsNeverTransmit() {
+        ContactGraph g = path(6);
+        double[] q = {1, 1, 0, 1, 1};    // contact 2 links P2 and P3
+        OutbreakSimulator.Result r = new OutbreakSimulator(g, settings(0.5, 10, 1, 20, 1), q)
+                .run(new int[] {0}, new boolean[6]);
+
+        assertEquals(2, r.max(), "the chain stops at the zero-risk contact: only P1 and P2 are infected");
+    }
+
+    @Test
+    void durationWeightedRiskGrowsWithContactTime() {
+        ContactGraph g = new ContactGraph();
+        for (int i = 0; i < 5; i++) {
+            g.addPerson(new Person("P" + i, "", null, "", false));
+        }
+        g.addContact(0, 1, DAY, 15);
+        g.addContact(0, 2, DAY, 30);
+        g.addContact(0, 3, DAY, 1);
+        g.addContact(0, 4, DAY, -1);    // unknown duration counts as 15 minutes
+
+        double[] q = OutbreakSimulator.durationWeighted(g, 0.2);
+
+        assertEquals(0.2, q[0], 1e-12, "15 minutes = one exposure");
+        assertEquals(1 - 0.8 * 0.8, q[1], 1e-12, "30 minutes = two exposures");
+        assertEquals(1 - Math.pow(0.8, 1 / 15.0), q[2], 1e-12);
+        assertTrue(q[2] < q[0] && q[0] < q[1]);
+        assertEquals(0.2, q[3], 1e-12);
+    }
+
+    @Test
+    void invalidContactProbabilitiesAreRejected() {
+        ContactGraph g = path(3);
+        assertThrows(IllegalArgumentException.class,
+                () -> new OutbreakSimulator(g, settings(0.1, 3, 1, 1, 1), new double[] {0.5}));
+        assertThrows(IllegalArgumentException.class,
+                () -> new OutbreakSimulator(g, settings(0.1, 3, 1, 1, 1), new double[] {0.5, 1.5}));
+        assertThrows(IllegalArgumentException.class, () -> OutbreakSimulator.durationWeighted(g, -0.1));
+    }
 }

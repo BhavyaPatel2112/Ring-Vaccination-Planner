@@ -56,3 +56,9 @@ A network with one example of each input problem. It shows that bad rows are rep
 | greedy-worst-case-18 | 58 | 259 | Same construction, larger. Greedy picks 40 against an optimum of 18 (ratio 2.22), worse than the approximation's guaranteed bound of 2. |
 
 The greedy worst-case networks have 12 or 18 "left" people (P001 onwards). For every block size i from 2 up to that number, the left people are split into groups of i, and each group gets one "right" person who meets every member of the group. The left people form a cover of the right size. Greedy keeps picking the right people, which have the most links at each step.
+
+## Real network
+
+| Folder | People | Links | Why it is here |
+|---|---|---|---|
+| sociopatterns-high-school | 327 | 5,818 | **Real contacts** between students of a Marseille high school, recorded by wearable sensors over 5 days (SocioPatterns, 2013). The two cases (S061, S164) are hypothetical. See [../sociopatterns](../sociopatterns/README.md) for the source, licence and conversion. |

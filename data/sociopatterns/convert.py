@@ -8,6 +8,8 @@ t i j Ci Cj). An optional metadata file gives  id class gender  per line.
 
 Each pair of people becomes one contact. Its duration is the number of
 20-second intervals times 20 seconds; its date is the day of the last interval.
+The data records contacts, not infections, so --cases picks hypothetical
+confirmed cases with a fixed seed (2 by default).
 
 This script only reformats the data. All the algorithms run in the Java backend.
 
@@ -74,6 +76,8 @@ def main():
     parser.add_argument("--start-date", default="2013-12-02", help="date of t = first time, for relative timestamps")
     parser.add_argument("--vaccinated-share", type=float, default=0.0,
                         help="share of people marked as already vaccinated (seeded), default 0")
+    parser.add_argument("--cases", type=int, default=2,
+                        help="number of hypothetical confirmed cases to pick (seeded), default 2")
     parser.add_argument("--seed", type=int, default=2026)
     args = parser.parse_args()
 
@@ -105,6 +109,17 @@ def main():
     random.seed(args.seed)
     vaccinated = set(random.sample(sorted(people), int(round(args.vaccinated_share * len(people)))))
 
+    # The data has real contacts but no infections, so the cases are hypothetical:
+    # seeded picks among people with at least 2 contacts who are not vaccinated,
+    # confirmed the day after the last recorded contact.
+    degree = defaultdict(int)
+    for i, j in intervals:
+        degree[i] += 1
+        degree[j] += 1
+    candidates = sorted((p for p in people if degree[p] >= 2 and p not in vaccinated), key=lambda x: ids[x])
+    cases = sorted(random.sample(candidates, min(args.cases, len(candidates))), key=lambda x: ids[x])
+    confirmed = max(last_day.values()) + dt.timedelta(days=1)
+
     os.makedirs(args.out, exist_ok=True)
     with open(os.path.join(args.out, "people.csv"), "w", newline="") as f:
         w = csv.writer(f)
@@ -117,7 +132,13 @@ def main():
         for (i, j), count in sorted(intervals.items(), key=lambda kv: (ids[kv[0][0]], ids[kv[0][1]])):
             minutes = max(1, round(count * INTERVAL_SECONDS / 60))
             w.writerow([ids[i], ids[j], last_day[(i, j)].isoformat(), minutes])
-    print(f"{len(people)} people and {len(intervals)} contacts written to {args.out}")
+    with open(os.path.join(args.out, "cases.csv"), "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["person_id", "confirmed_date"])
+        for p in cases:
+            w.writerow([ids[p], confirmed.isoformat()])
+    print(f"{len(people)} people, {len(intervals)} contacts and {len(cases)} hypothetical cases "
+          f"({', '.join(ids[p] for p in cases)}) written to {args.out}")
 
 
 if __name__ == "__main__":
